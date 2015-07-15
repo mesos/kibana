@@ -10,7 +10,7 @@ targetCompatibility = '1.7'
 jar {
     from { configurations.compile.collect { it.isDirectory() ? it : zipTree(it) } } // Include dependencies
     manifest {
-        attributes 'Main-Class': 'org.apache.mesos.kibana.scheduler.main'
+        attributes 'Main-Class': 'org.apache.mesos.kibana.KibanaFramework'
     }
 }
 
