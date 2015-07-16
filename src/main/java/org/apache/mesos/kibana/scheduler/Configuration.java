@@ -28,7 +28,9 @@ public class Configuration {
         return MEM;
     }
 
-    public static double getPORTS() {return PORTS;}
+    public static double getPORTS() {
+        return PORTS;
+    }
 
     public String getMasterAddress() {
         return masterAddress;

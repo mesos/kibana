@@ -24,10 +24,9 @@ public class KibanaScheduler implements Scheduler {
         this.configuration = configuration;
     }
 
-
     private void launchTask(String elasticSearchUrl, Offer offer, SchedulerDriver driver) {
         TaskID taskId = generateTaskId();
-        long port = ResourceHelper.pickPort(offer);
+        long port = Resources.pickPort(offer);
         ContainerInfo.Builder containerInfo = buildContainerInfo(port);
         Environment environment = buildEnvironment(elasticSearchUrl);
         CommandInfo.Builder commandInfoBuilder = buildCommandInfo(environment);
@@ -118,9 +117,9 @@ public class KibanaScheduler implements Scheduler {
                 .setName(taskId.getValue())
                 .setTaskId(taskId)
                 .setSlaveId(offer.getSlaveId())
-                .addResources(ResourceHelper.cpus(Configuration.getCPU()))
-                .addResources(ResourceHelper.mem(Configuration.getMEM()))
-                .addResources(ResourceHelper.ports(port, port))
+                .addResources(Resources.cpus(Configuration.getCPU()))
+                .addResources(Resources.mem(Configuration.getMEM()))
+                .addResources(Resources.ports(port, port))
                 .setContainer(containerInfo)
                 .setCommand(commandInfoBuilder)
                 .build();

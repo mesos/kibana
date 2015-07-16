@@ -3,8 +3,7 @@ package org.apache.mesos.kibana.scheduler;
 import org.apache.mesos.Protos;
 
 
-public class ResourceHelper {
-
+public class Resources {
     public static Protos.Resource cpus(double cpus) {
         return Protos.Resource.newBuilder()
                 .setName("cpus")
@@ -31,8 +30,8 @@ public class ResourceHelper {
     }
 
     public static long pickPort(Protos.Offer offer) {
-        for(Protos.Resource resource : offer.getResourcesList()){
-            if(resource.getName().equals("ports")){
+        for (Protos.Resource resource : offer.getResourcesList()) {
+            if (resource.getName().equals("ports")) {
                 return resource.getRanges().getRangeList().get(0).getBegin();
             }
         }

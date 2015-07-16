@@ -21,9 +21,9 @@ public class KibanaSchedulerTest extends TestCase {
                     .setSlaveId(Protos.SlaveID.newBuilder().setValue("slave-" + i).build())
                     .setFrameworkId(Protos.FrameworkID.newBuilder().setValue("KibanaFramework").build())
                     .setHostname("localhost")
-                    .addResources(ResourceHelper.cpus(Configuration.getCPU()))
-                    .addResources(ResourceHelper.mem(Configuration.getMEM()))
-                    .addResources(ResourceHelper.ports(5601L, (long) (5600L + Configuration.getPORTS())))
+                    .addResources(Resources.cpus(Configuration.getCPU()))
+                    .addResources(Resources.mem(Configuration.getMEM()))
+                    .addResources(Resources.ports(5601L, (long) (5600L + Configuration.getPORTS())))
                     .build();
             offers.add(offer);
         }
