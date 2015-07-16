@@ -2,6 +2,7 @@ package org.apache.mesos.kibana.scheduler;
 
 import org.apache.mesos.Protos;
 
+
 public class ResourceHelper {
 
     public static Protos.Resource cpus(double cpus) {
@@ -27,5 +28,14 @@ public class ResourceHelper {
                 .setType(Protos.Value.Type.RANGES)
                 .setRanges(Protos.Value.Ranges.newBuilder().addRange(ports))
                 .build();
+    }
+
+    public static long pickPort(Protos.Offer offer) {
+        for(Protos.Resource resource : offer.getResourcesList()){
+            if(resource.getName().equals("ports")){
+                return resource.getRanges().getRangeList().get(0).getBegin();
+            }
+        }
+        return -1;
     }
 }
