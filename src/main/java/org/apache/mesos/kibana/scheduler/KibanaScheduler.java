@@ -12,31 +12,49 @@ import java.util.List;
 import java.util.Map;
 import java.util.concurrent.atomic.AtomicInteger;
 
+/**
+ * The Scheduler for the KibanaFramework, in charge of starting tasks on the Mesos Slaves to fulfill requirements.
+ */
 public class KibanaScheduler implements Scheduler {
-
     private static final Logger logger = LoggerFactory.getLogger(KibanaScheduler.class);
+    private final AtomicInteger taskIDGenerator = new AtomicInteger();  // used to generate task numbers
+    private Configuration configuration; // contains the scheduler's settings and tasks
 
-    private final AtomicInteger taskIDGenerator = new AtomicInteger();
-    private Configuration configuration;
-
+    /**
+     * Constructor for KibanaScheduler
+     *
+     * @param configuration the Configuration to use
+     */
     public KibanaScheduler(Configuration configuration) {
         logger.info("constructing " + KibanaScheduler.class.getName());
         this.configuration = configuration;
     }
 
+    /**
+     * Launches a new Kibana task for the given elasticSearchUrl, using the offer
+     *
+     * @param elasticSearchUrl the elasticSearchUrl Kibana will use
+     * @param offer            the offer to create the task for
+     * @param driver           the driver to launch the task with
+     */
     private void launchTask(String elasticSearchUrl, Offer offer, SchedulerDriver driver) {
         TaskID taskId = generateTaskId();
         long port = Resources.pickPort(offer);
         ContainerInfo.Builder containerInfo = buildContainerInfo(port);
         Environment environment = buildEnvironment(elasticSearchUrl);
         CommandInfo.Builder commandInfoBuilder = buildCommandInfo(environment);
-        TaskInfo task = buildTask(taskId, offer, containerInfo, commandInfoBuilder, port);
+        TaskInfo task = buildTaskInfo(taskId, offer, containerInfo, commandInfoBuilder, port);
         Filters filters = Filters.newBuilder().setRefuseSeconds(1).build();
-        logger.info("Launching task {}", taskId.getValue());
         configuration.putRunningInstances(elasticSearchUrl, taskId);
         driver.launchTasks(Arrays.asList(offer.getId()), Arrays.asList(task), filters);
     }
 
+    /**
+     * Checks whether the given offer has the tasks' required resources
+     *
+     * @param offer the offer whose resources to check
+     * @return a boolean representing whether or not the offer has all the required resources
+     */
     private boolean offerIsAcceptable(Offer offer) {
         boolean hasCpus = false;
         double offerCpus = 0;
@@ -72,13 +90,26 @@ public class KibanaScheduler implements Scheduler {
             logger.info("Rejecting offer {} due to lack of ports (required {}, got {})", offer.getId().getValue(), Configuration.getPORTS(), offerPorts);
             return false;
         }
+
+        logger.info("Accepting offer {} with {} cpus, {} memory and {} ports", offer.getId().getValue(), offerCpus, offerMem, offerPorts);
         return true;
     }
 
+    /**
+     * Generates a new TaskID
+     *
+     * @return a new TaskID
+     */
     private TaskID generateTaskId() {
         return TaskID.newBuilder().setValue("Kibana-" + Integer.toString(taskIDGenerator.incrementAndGet())).build();
     }
 
+    /**
+     * Prepares a CommandInfoBuilder, including the given Environment
+     *
+     * @param environment the Environment to include
+     * @return the CommandInfoBuilder
+     */
     private CommandInfo.Builder buildCommandInfo(Environment environment) {
         CommandInfo.Builder commandInfoBuilder = CommandInfo.newBuilder();
         commandInfoBuilder.setEnvironment(environment);
@@ -86,6 +117,12 @@ public class KibanaScheduler implements Scheduler {
         return commandInfoBuilder;
     }
 
+    /**
+     * Prepares the Environment, setting the given elasticSearchUrl as an Environment Variable
+     *
+     * @param elasticSearchUrl the elasticSearchUrl to set
+     * @return the Environment
+     */
     private Environment buildEnvironment(String elasticSearchUrl) {
         Environment.Variable elasticSearchUrlVar = Environment.Variable.newBuilder()
                 .setName("ELASTICSEARCH_URL")
@@ -99,6 +136,12 @@ public class KibanaScheduler implements Scheduler {
                 .build();
     }
 
+    /**
+     * Prepares the Docker ContainerInfo, adding a PortMapping for the given host port
+     *
+     * @param port the host port to direct to Kibana
+     * @return the Docker ContainerInfo
+     */
     private ContainerInfo.Builder buildContainerInfo(long port) {
         ContainerInfo.DockerInfo.Builder dockerInfo = ContainerInfo.DockerInfo.newBuilder();
         dockerInfo.setImage(Configuration.getDockerImageName());
@@ -112,7 +155,17 @@ public class KibanaScheduler implements Scheduler {
         return containerInfo;
     }
 
-    private TaskInfo buildTask(TaskID taskId, Offer offer, ContainerInfo.Builder containerInfo, CommandInfo.Builder commandInfoBuilder, long port) {
+    /**
+     * Prepares the TaskInfo for the Kibana task
+     *
+     * @param taskId        the tasks' ID
+     * @param offer         the offer with which to run the task
+     * @param containerInfo the tasks' ContainerInfo
+     * @param commandInfo   the tasks' CommandInfo
+     * @param port          the host port which will be mapped
+     * @return the TaskInfo
+     */
+    private TaskInfo buildTaskInfo(TaskID taskId, Offer offer, ContainerInfo.Builder containerInfo, CommandInfo.Builder commandInfo, long port) {
         TaskInfo task = TaskInfo.newBuilder()
                 .setName(taskId.getValue())
                 .setTaskId(taskId)
@@ -121,7 +174,7 @@ public class KibanaScheduler implements Scheduler {
                 .addResources(Resources.mem(Configuration.getMEM()))
                 .addResources(Resources.ports(port, port))
                 .setContainer(containerInfo)
-                .setCommand(commandInfoBuilder)
+                .setCommand(commandInfo)
                 .build();
         return task;
     }
@@ -150,6 +203,7 @@ public class KibanaScheduler implements Scheduler {
         for (Map.Entry<String, Integer> requirement : configuration.getRequirementDeltaMap().entrySet()) {
             int delta = requirement.getValue();
             if (delta > 0) {
+                logger.info("ElasticSearch {} is missing {} tasks. Attempting to start tasks.", requirement.getKey(), delta);
                 while (delta > 0) {
                     if (acceptableOffers.isEmpty()) return;
                     Offer pickedOffer = acceptableOffers.get(0);
@@ -158,6 +212,7 @@ public class KibanaScheduler implements Scheduler {
                     delta--;
                 }
             } else if (delta < 0) {
+                logger.info("ElasticSearch {} has an excess of {} tasks. Removal of tasks not implemented yet.", requirement.getKey(), delta);
                 //TODO too many instances running. kill tasks. Do we do this here?
             }
         }
@@ -176,7 +231,7 @@ public class KibanaScheduler implements Scheduler {
         switch (taskStatus.getState()) {
             case TASK_FAILED:
             case TASK_FINISHED:
-                logger.info("removing task {} due to state: {}", taskId.getValue(), taskStatus.getState());
+                logger.info("Removing task {} due to state: {}", taskId.getValue(), taskStatus.getState());
                 configuration.removeRunningTask(taskId);
                 break;
         }

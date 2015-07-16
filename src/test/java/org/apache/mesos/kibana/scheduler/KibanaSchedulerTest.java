@@ -10,9 +10,19 @@ import java.util.List;
 
 import static org.mockito.Mockito.mock;
 
+/**
+ * Unit tests for the KibanaScheduler class
+ */
 public class KibanaSchedulerTest extends TestCase {
 
     //TODO Move to a TestUtils class or something...
+
+    /**
+     * Creates given amount of offers that fulfill Kibana's requirements
+     *
+     * @param amount amount of offers to generate
+     * @return a list of valid offers
+     */
     private static List<Protos.Offer> getValidOffers(int amount) {
         List<Protos.Offer> offers = new ArrayList<>();
         for (int i = 0; i < amount; i++) {
@@ -31,6 +41,9 @@ public class KibanaSchedulerTest extends TestCase {
     }
 
     @Test
+    /**
+     * Tests if a single task is started for one ElasticSearch when given enough offers
+     */
     public void testResourceOffers_startsSingleInstanceForSingleElasticSearch() throws Exception {
         String elasticSearch1 = "myElasticSearch1:9200";
         Configuration configuration = new Configuration();
@@ -46,6 +59,9 @@ public class KibanaSchedulerTest extends TestCase {
     }
 
     @Test
+    /**
+     * Tests if multiple tasks are started for one ElasticSearch when given enough offers
+     */
     public void testResourceOffers_startsMultipleInstancesForSingleElasticSearch() throws Exception {
         String elasticSearch1 = "myElasticSearch1:9200";
         Configuration configuration = new Configuration();

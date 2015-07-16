@@ -4,9 +4,15 @@ import org.junit.Test;
 
 import static org.junit.Assert.*;
 
+/**
+ * Unit tests for the Configuration class
+ */
 public class ConfigurationTest {
 
     @Test
+    /**
+     * Simply tests if arguments are parsed and added to the Configuration nicely
+     */
     public void handleArguments_parsesArguments() {
         String hostName = "myHostName:myPort";
         String elasticSearch1 = "myElasticSearch1:9200";
@@ -25,6 +31,9 @@ public class ConfigurationTest {
     }
 
     @Test
+    /**
+     * Tests if adding instance requirements works properly
+     */
     public void putRequiredInstances_addsRequirements() {
         String elasticSearch1 = "myElasticSearch1:9200";
         String elasticSearch2 = "myElasticSearch2:9200";
@@ -47,6 +56,9 @@ public class ConfigurationTest {
     }
 
     @Test
+    /**
+     * Tests if requesting enough negative instances removes the requirement entry
+     */
     public void putRequiredInstances_removesRequirements() {
         String elasticSearch1 = "myElasticSearch1:9200";
         Configuration config = new Configuration();

@@ -5,24 +5,35 @@ import org.apache.mesos.Protos;
 import org.apache.mesos.Scheduler;
 import org.apache.mesos.kibana.scheduler.Configuration;
 import org.apache.mesos.kibana.scheduler.KibanaScheduler;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 public class KibanaFramework {
+    private static final Logger logger = LoggerFactory.getLogger(KibanaFramework.class);
 
+    /**
+     * Outputs how the KibanaFramework should be called
+     */
     private static void printUsage() {
         String name = KibanaFramework.class.getName();
         System.err.println("Usage: " + name + "master:port ElasticSearchUrls..");
     }
 
-    public static void main(String[] args) throws Exception {
+    /**
+     * KibanaFramework entry point
+     *
+     * @param args application launch arguments
+     */
+    public static void main(String[] args) {
         if (args.length < 2) {
             printUsage();
+            logger.error("Not enough arguments were passed in, expected at least two.");
             System.exit(1);
         }
 
         Configuration config = new Configuration();
         config.handleArguments(args);
 
-        //TODO: Move these things to the config?
         Protos.FrameworkInfo framework = Protos.FrameworkInfo.newBuilder()
                 .setId(Protos.FrameworkID.newBuilder().setValue("KibanaFramework"))
                 .setName("KibanaFramework")

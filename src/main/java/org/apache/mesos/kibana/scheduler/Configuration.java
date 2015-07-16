@@ -1,50 +1,86 @@
 package org.apache.mesos.kibana.scheduler;
 
 import org.apache.mesos.Protos;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
+/**
+ * Contains the configuration for a KibanaScheduler.
+ * Used to manage task settings and required/running tasks.
+ */
 public class Configuration {
-    private static final String dockerImageName = "kibana";
-    private static final double CPU = 0.1D;
-    private static final double MEM = 128D;
-    private static final double PORTS = 1D;
-    protected Map<String, Integer> requiredInstances = new HashMap<>();
-    protected Map<String, List<Protos.TaskID>> runningInstances = new HashMap<>();
-    private String masterAddress;
+    private static final Logger logger = LoggerFactory.getLogger(Configuration.class);
+    private static final String dockerImageName = "kibana"; // the name of Kibana Docker image to use when starting a task
+    private static final double CPU = 0.1D;                 // the amount of CPUs a task needs
+    private static final double MEM = 128D;                 // the amount of memory a task needs
+    private static final double PORTS = 1D;                 // the amount of ports a task needs
+    protected Map<String, Integer> requiredInstances = new HashMap<>();             // a map containing the required instances: <elasticSearchUrl, numberOfInstances>
+    protected Map<String, List<Protos.TaskID>> runningInstances = new HashMap<>();  // a map containing the currently running instances: <elasticSearchUrl, listOfTaskIds>
+    private String masterAddress;                           // the address of the Mesos master
 
+    /**
+     * Returns the name of the Kibana Docker image
+     *
+     * @return the name of the Kibana Docker image
+     */
     public static String getDockerImageName() {
         return dockerImageName;
     }
 
+    /**
+     * Returns the amount of CPU a task needs
+     *
+     * @return the amount of CPU a task needs
+     */
     public static double getCPU() {
         return CPU;
     }
 
+    /**
+     * Returns the amount of memory a task needs
+     *
+     * @return the amount of memory a task needs
+     */
     public static double getMEM() {
         return MEM;
     }
 
+    /**
+     * Returns the amount of ports a task needs
+     *
+     * @return the amount of ports a task needs
+     */
     public static double getPORTS() {
         return PORTS;
     }
 
+    /**
+     * Returns the address of the Mesos master
+     *
+     * @return the address of the Mesos master
+     */
     public String getMasterAddress() {
         return masterAddress;
     }
 
+    /**
+     * Sets the address of the Mesos master
+     *
+     * @param masterAddress the address of the mesos master
+     */
     public void setMasterAddress(String masterAddress) {
+        logger.info("Setting Mesos master address to {}", masterAddress);
         this.masterAddress = masterAddress;
     }
 
     /**
-     * Adds the given integer to the required amount of instances for the given elasticSearchUrl.
-     * If the new required amount of instances is equal to or lower than 0, the elasticSearchUrl is removed from the requirements.
-     * TODO: find a name that better matches the method
-     * TODO: Is handling of instances configuration?
+     * Increases the required number of instances for the given elasticSearchUrl by the given amount.
+     * If the resulting amount of required instances is equal to or lower than 0, the elasticSearchUrl entry is removed from the requirements.
      *
      * @param elasticSearchUrl the elasticSearchUrl to change the required amount of instances for
      * @param amount           the amount by which to change the required amount of instances
@@ -54,21 +90,24 @@ public class Configuration {
             int newAmount = amount + requiredInstances.get(elasticSearchUrl).intValue();
             if (newAmount <= 0) {
                 requiredInstances.remove(elasticSearchUrl);
+                logger.info("RequiredInstances: No more instances are required for ElasticSearch {}", elasticSearchUrl);
             } else {
                 requiredInstances.put(elasticSearchUrl, newAmount);
+                logger.info("RequiredInstances: Now requiring {} instances for ElasticSearch {}", newAmount, elasticSearchUrl);
             }
         } else if (amount > 0) {
             requiredInstances.put(elasticSearchUrl, amount);
+            logger.info("RequiredInstances: Now requiring {} instances for ElasticSearch {}", amount, elasticSearchUrl);
         }
     }
 
     /**
-     * Gets a Map with all known elasticSearchUrls and the delta between the required and running number of instances.
+     * Returns a Map with all known elasticSearchUrls and the delta between the required and running number of instances.
      *
      * @return a Map with all known elasticSearchUrls and the delta between the required and running number of instances
      */
     public Map<String, Integer> getRequirementDeltaMap() {
-        //TODO clean up distinct merge
+        //TODO Find a nicer way to merge these lists
         List<String> elasticSearchUrls = new ArrayList<>();
         elasticSearchUrls.addAll(requiredInstances.keySet());
         elasticSearchUrls.removeAll(runningInstances.keySet());
@@ -102,7 +141,6 @@ public class Configuration {
             int actualAmount = runningInstances.get(elasticSearchUrl).size();
             return -actualAmount;
         }
-
         return 0;
     }
 
@@ -126,24 +164,26 @@ public class Configuration {
      * @param taskId           the task to add
      */
     public void putRunningInstances(String elasticSearchUrl, Protos.TaskID taskId) {
-        if (runningInstances.containsKey(elasticSearchUrl))
+        if (runningInstances.containsKey(elasticSearchUrl)) {
             runningInstances.get(elasticSearchUrl).add(taskId);
-        else {
+        } else {
             ArrayList<Protos.TaskID> instances = new ArrayList<>();
             instances.add(taskId);
             runningInstances.put(elasticSearchUrl, instances);
         }
+        logger.info("Now running task {} for ElasticSearch{}", taskId.getValue(), elasticSearchUrl);
     }
 
     /**
      * Removes the given task from the currently running tasks.
      *
-     * @param task the task to remove
+     * @param taskId the task to remove
      */
-    public void removeRunningTask(Protos.TaskID task) {
+    public void removeRunningTask(Protos.TaskID taskId) {
         for (List<Protos.TaskID> tasks : runningInstances.values()) {
-            if (tasks.contains(task)) {
-                tasks.remove(task);
+            if (tasks.contains(taskId)) {
+                tasks.remove(taskId);
+                logger.info("Removed task {} for ElasticSearch{}", taskId.getValue());
                 return;
             }
         }
