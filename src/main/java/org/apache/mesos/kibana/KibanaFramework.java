@@ -9,7 +9,7 @@ public class KibanaFramework {
 
     private static void usage() {
         String name = KibanaFramework.class.getName();
-        System.err.println("Usage: " + name + "[Master:Port] [ElasticSearchUrl]");
+        System.err.println("Usage: " + name + "[master:port] [ElasticSearchUrl]");
     }
 
     public static void main(String[] args) throws Exception {

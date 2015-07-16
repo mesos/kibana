@@ -14,7 +14,6 @@ public class KibanaScheduler implements Scheduler {
 
     private static final Logger logger = LoggerFactory.getLogger(KibanaScheduler.class);
 
-    private final String dockerImageName = "kibana";
     private final int instancesToRun = 1;
     private final String elasticSearchUrl;
 
@@ -83,7 +82,7 @@ public class KibanaScheduler implements Scheduler {
 
     private ContainerInfo.Builder buildContainerInfo() {
         ContainerInfo.DockerInfo.Builder dockerInfo = ContainerInfo.DockerInfo.newBuilder();
-        dockerInfo.setImage(dockerImageName);
+        dockerInfo.setImage(Configuration.getDockerImageName());
         dockerInfo.addPortMappings(ContainerInfo.DockerInfo.PortMapping.newBuilder().setHostPort(31001).setContainerPort(5601).setProtocol("tcp"));
         dockerInfo.setNetwork(ContainerInfo.DockerInfo.Network.BRIDGE);
         dockerInfo.build();
@@ -99,8 +98,8 @@ public class KibanaScheduler implements Scheduler {
                 .setName(taskId.getValue())
                 .setTaskId(taskId)
                 .setSlaveId(offer.getSlaveId())
-                .addResources(ResourceHelper.cpus(0.1D))
-                .addResources(ResourceHelper.mem(512D))
+                .addResources(ResourceHelper.cpus(Configuration.getCPU()))
+                .addResources(ResourceHelper.mem(Configuration.getMEM()))
                 .addResources(ResourceHelper.ports(31000L, 32000L)) //TODO you don't need all of them, just pick the necessary amount from the range...
                 .setContainer(containerInfo)
                 .setCommand(commandInfoBuilder)
