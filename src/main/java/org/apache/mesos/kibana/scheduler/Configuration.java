@@ -67,7 +67,7 @@ public class Configuration {
      * @param offer  the offer from which's resources to pick a port
      * @return a port number
      */
-    public long pickPort(Protos.TaskID taskId, Protos.Offer offer) {
+    public long pickAndRegisterPort(Protos.TaskID taskId, Protos.Offer offer) {
         for (Protos.Resource resource : offer.getResourcesList()) {
             if (resource.getName().equals("ports")) {
                 List<Protos.Value.Range> offeredRanges = resource.getRanges().getRangeList();

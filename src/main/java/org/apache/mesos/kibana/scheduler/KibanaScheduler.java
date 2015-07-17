@@ -10,14 +10,12 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 import java.util.Map;
-import java.util.concurrent.atomic.AtomicInteger;
 
 /**
  * The Scheduler for the KibanaFramework, in charge of starting tasks on the Mesos Slaves to fulfill requirements.
  */
 public class KibanaScheduler implements Scheduler {
     private static final Logger logger = LoggerFactory.getLogger(KibanaScheduler.class);
-    private final AtomicInteger taskIDGenerator = new AtomicInteger();  // used to generate task numbers
     private Configuration configuration; // contains the scheduler's settings and tasks
 
     /**
@@ -28,25 +26,6 @@ public class KibanaScheduler implements Scheduler {
     public KibanaScheduler(Configuration configuration) {
         logger.info("constructing " + KibanaScheduler.class.getName());
         this.configuration = configuration;
-    }
-
-    /**
-     * Launches a new Kibana task for the given elasticSearchUrl, using the offer
-     *
-     * @param elasticSearchUrl the elasticSearchUrl Kibana will use
-     * @param offer            the offer to create the task for
-     * @param driver           the driver to launch the task with
-     */
-    private void launchTask(String elasticSearchUrl, Offer offer, SchedulerDriver driver) {
-        TaskID taskId = generateTaskId();
-        long port = configuration.pickPort(taskId, offer);
-        ContainerInfo.Builder containerInfo = buildContainerInfo(port);
-        Environment environment = buildEnvironment(elasticSearchUrl);
-        CommandInfo.Builder commandInfoBuilder = buildCommandInfo(environment);
-        TaskInfo task = buildTaskInfo(taskId, offer, containerInfo, commandInfoBuilder, port);
-        Filters filters = Filters.newBuilder().setRefuseSeconds(1).build();
-        configuration.putRunningInstances(elasticSearchUrl, taskId);
-        driver.launchTasks(Arrays.asList(offer.getId()), Arrays.asList(task), filters);
     }
 
     /**
@@ -96,88 +75,20 @@ public class KibanaScheduler implements Scheduler {
     }
 
     /**
-     * Generates a new TaskID
+     * Launches a new Kibana task for the given elasticSearchUrl, using the offer
      *
-     * @return a new TaskID
+     * @param requirement the requirement for the task
+     * @param offer       the offer used to run the task
+     * @param driver      the driver used to launch the task
      */
-    private TaskID generateTaskId() {
-        return TaskID.newBuilder().setValue("Kibana-" + Integer.toString(taskIDGenerator.incrementAndGet())).build();
+    private void launchNewTask(Map.Entry<String, Integer> requirement, Offer offer, SchedulerDriver driver) {
+        TaskInfo task = TaskInfoFactory.buildTask(requirement, offer, configuration);
+        configuration.putRunningInstances(requirement.getKey(), task.getTaskId());
+
+        Filters filters = Filters.newBuilder().setRefuseSeconds(1).build();
+        driver.launchTasks(Arrays.asList(offer.getId()), Arrays.asList(task), filters);
     }
 
-    /**
-     * Prepares a CommandInfoBuilder, including the given Environment
-     *
-     * @param environment the Environment to include
-     * @return the CommandInfoBuilder
-     */
-    private CommandInfo.Builder buildCommandInfo(Environment environment) {
-        CommandInfo.Builder commandInfoBuilder = CommandInfo.newBuilder();
-        commandInfoBuilder.setEnvironment(environment);
-        commandInfoBuilder.setShell(false);
-        return commandInfoBuilder;
-    }
-
-    /**
-     * Prepares the Environment, setting the given elasticSearchUrl as an Environment Variable
-     *
-     * @param elasticSearchUrl the elasticSearchUrl to set
-     * @return the Environment
-     */
-    private Environment buildEnvironment(String elasticSearchUrl) {
-        Environment.Variable elasticSearchUrlVar = Environment.Variable.newBuilder()
-                .setName("ELASTICSEARCH_URL")
-                .setValue(elasticSearchUrl)
-                .build();
-
-        List<Environment.Variable> variables = Arrays.asList(elasticSearchUrlVar);
-
-        return Environment.newBuilder()
-                .addAllVariables(variables)
-                .build();
-    }
-
-    /**
-     * Prepares the Docker ContainerInfo, adding a PortMapping for the given host port
-     *
-     * @param port the host port to direct to Kibana
-     * @return the Docker ContainerInfo
-     */
-    private ContainerInfo.Builder buildContainerInfo(long port) {
-        ContainerInfo.DockerInfo.Builder dockerInfo = ContainerInfo.DockerInfo.newBuilder();
-        dockerInfo.setImage(Configuration.getDockerImageName());
-        dockerInfo.addPortMappings(ContainerInfo.DockerInfo.PortMapping.newBuilder().setHostPort((int) port).setContainerPort(5601).setProtocol("tcp"));
-        dockerInfo.setNetwork(ContainerInfo.DockerInfo.Network.BRIDGE);
-        dockerInfo.build();
-
-        ContainerInfo.Builder containerInfo = ContainerInfo.newBuilder();
-        containerInfo.setType(ContainerInfo.Type.DOCKER);
-        containerInfo.setDocker(dockerInfo).build();
-        return containerInfo;
-    }
-
-    /**
-     * Prepares the TaskInfo for the Kibana task
-     *
-     * @param taskId        the tasks' ID
-     * @param offer         the offer with which to run the task
-     * @param containerInfo the tasks' ContainerInfo
-     * @param commandInfo   the tasks' CommandInfo
-     * @param port          the host port which will be mapped
-     * @return the TaskInfo
-     */
-    private TaskInfo buildTaskInfo(TaskID taskId, Offer offer, ContainerInfo.Builder containerInfo, CommandInfo.Builder commandInfo, long port) {
-        TaskInfo task = TaskInfo.newBuilder()
-                .setName(taskId.getValue())
-                .setTaskId(taskId)
-                .setSlaveId(offer.getSlaveId())
-                .addResources(Resources.cpus(Configuration.getCPU()))
-                .addResources(Resources.mem(Configuration.getMEM()))
-                .addResources(Resources.ports(port, port))
-                .setContainer(containerInfo)
-                .setCommand(commandInfo)
-                .build();
-        return task;
-    }
 
     @Override
     public void registered(SchedulerDriver schedulerDriver, FrameworkID frameworkID, MasterInfo masterInfo) {
@@ -207,7 +118,7 @@ public class KibanaScheduler implements Scheduler {
                 while (delta > 0) {
                     if (acceptableOffers.isEmpty()) return;
                     Offer pickedOffer = acceptableOffers.get(0);
-                    launchTask(requirement.getKey(), pickedOffer, schedulerDriver);
+                    launchNewTask(requirement, pickedOffer, schedulerDriver);
                     acceptableOffers.remove(pickedOffer);
                     delta--;
                 }
