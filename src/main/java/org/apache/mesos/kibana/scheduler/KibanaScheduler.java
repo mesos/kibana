@@ -39,7 +39,7 @@ public class KibanaScheduler implements Scheduler {
      */
     private void launchTask(String elasticSearchUrl, Offer offer, SchedulerDriver driver) {
         TaskID taskId = generateTaskId();
-        long port = Resources.pickPort(offer);
+        long port = configuration.pickPort(taskId, offer);
         ContainerInfo.Builder containerInfo = buildContainerInfo(port);
         Environment environment = buildEnvironment(elasticSearchUrl);
         CommandInfo.Builder commandInfoBuilder = buildCommandInfo(environment);

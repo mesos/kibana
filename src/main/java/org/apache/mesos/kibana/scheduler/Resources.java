@@ -2,6 +2,8 @@ package org.apache.mesos.kibana.scheduler;
 
 import org.apache.mesos.Protos;
 
+import java.util.List;
+
 /**
  * A helper class for managing Mesos Resources
  */
@@ -48,20 +50,5 @@ public class Resources {
                 .setType(Protos.Value.Type.RANGES)
                 .setRanges(Protos.Value.Ranges.newBuilder().addRange(ports))
                 .build();
-    }
-
-    /**
-     * Picks a port number from the given offer's resources' ports
-     *
-     * @param offer the offer from which's resources to pick a port
-     * @return a port number
-     */
-    public static long pickPort(Protos.Offer offer) {
-        for (Protos.Resource resource : offer.getResourcesList()) {
-            if (resource.getName().equals("ports")) {
-                return resource.getRanges().getRangeList().get(0).getBegin();
-            }
-        }
-        return -1;
     }
 }

@@ -21,6 +21,7 @@ public class Configuration {
     private static final double PORTS = 1D;                 // the amount of ports a task needs
     protected Map<String, Integer> requiredInstances = new HashMap<>();             // a map containing the required instances: <elasticSearchUrl, numberOfInstances>
     protected Map<String, List<Protos.TaskID>> runningInstances = new HashMap<>();  // a map containing the currently running instances: <elasticSearchUrl, listOfTaskIds>
+    private Map<Protos.TaskID, Long> usedPorts = new HashMap<>();                   // a list containing the currently used ports, part of the Docker host ports workaround
     private String masterAddress;                           // the address of the Mesos master
 
     /**
@@ -57,6 +58,32 @@ public class Configuration {
      */
     public static double getPORTS() {
         return PORTS;
+    }
+
+    /**
+     * Picks a port number from the given offer's resources' ports
+     *
+     * @param taskId
+     * @param offer  the offer from which's resources to pick a port
+     * @return a port number
+     */
+    public long pickPort(Protos.TaskID taskId, Protos.Offer offer) {
+        for (Protos.Resource resource : offer.getResourcesList()) {
+            if (resource.getName().equals("ports")) {
+                List<Protos.Value.Range> offeredRanges = resource.getRanges().getRangeList();
+                for (Protos.Value.Range portRange : offeredRanges) {
+                    long begin = portRange.getBegin();
+                    long end = portRange.getEnd();
+                    for (long port = begin; port < end; port++) {
+                        if (!usedPorts.values().contains(port)) {
+                            usedPorts.put(taskId, port);
+                            return port;
+                        }
+                    }
+                }
+            }
+        }
+        return -1;
     }
 
     /**
@@ -120,7 +147,6 @@ public class Configuration {
         return requirementDeltaMap;
     }
 
-
     /**
      * Calculates the delta between the required amount and the running amount of instances for the given elasticSearchUrl
      *
@@ -183,6 +209,7 @@ public class Configuration {
         for (List<Protos.TaskID> tasks : runningInstances.values()) {
             if (tasks.contains(taskId)) {
                 tasks.remove(taskId);
+                usedPorts.remove(taskId);
                 logger.info("Removed task {} for ElasticSearch{}", taskId.getValue());
                 return;
             }
