@@ -22,7 +22,7 @@ public class SchedulerConfigurationTest {
 
         config.parseLaunchArguments(args.split(" "));
 
-        assertEquals(hostName, config.getMesosMasterAddress());
+        assertEquals(hostName, config.getZookeeperAddress());
         assertEquals(2, config.requiredTasks.size());
         assertTrue(config.requiredTasks.containsKey(elasticSearch1));
         assertEquals(1, config.requiredTasks.get(elasticSearch1).intValue());

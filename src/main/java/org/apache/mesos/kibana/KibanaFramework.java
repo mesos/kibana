@@ -16,7 +16,7 @@ public class KibanaFramework {
      */
     private static void printUsage() {
         String name = KibanaFramework.class.getName();
-        System.err.println("Usage: " + name + "master:port ElasticSearchUrls..");
+        System.err.println("Usage: " + name + "ZookeeperAddress ElasticSearchUrls[]");
     }
 
     /**
@@ -43,7 +43,7 @@ public class KibanaFramework {
                 .build();
 
         final Scheduler scheduler = new KibanaScheduler(config);
-        MesosSchedulerDriver driver = new MesosSchedulerDriver(scheduler, framework, config.getMesosMasterAddress());
+        MesosSchedulerDriver driver = new MesosSchedulerDriver(scheduler, framework, config.getZookeeperAddress());
 
         int status = driver.run() == Protos.Status.DRIVER_STOPPED ? 0 : 1;
         driver.stop();

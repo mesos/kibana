@@ -20,7 +20,7 @@ public class SchedulerConfiguration {
     protected Map<String, Integer> requiredTasks = new HashMap<>();             // a map containing the required tasks: <elasticSearchUrl, numberOfInstances>
     protected Map<String, List<Protos.TaskID>> runningTasks = new HashMap<>();  // a map containing the currently running tasks: <elasticSearchUrl, listOfTaskIds>
     private Map<Protos.TaskID, Long> usedPortNumbers = new HashMap<>();               // a list containing the currently used ports, part of the Docker host ports workaround
-    private String mesosMasterAddress;   // the address of the Mesos master
+    private String zookeeperAddress;   // the address of the Mesos zookeeper
 
     /**
      * Returns the name of the Kibana Docker image
@@ -89,18 +89,18 @@ public class SchedulerConfiguration {
      *
      * @return the address of the Mesos master
      */
-    public String getMesosMasterAddress() {
-        return mesosMasterAddress;
+    public String getZookeeperAddress() {
+        return zookeeperAddress;
     }
 
     /**
-     * Sets the address of the Mesos master
+     * Sets the zookeeper address
      *
-     * @param mesosMasterAddress the address of the mesos master
+     * @param zookeeperAddress the address of the mesos master
      */
-    public void setMesosMasterAddress(String mesosMasterAddress) {
-        logger.info("Setting Mesos master address to {}", mesosMasterAddress);
-        this.mesosMasterAddress = mesosMasterAddress;
+    public void setZookeeperAddress(String zookeeperAddress) {
+        logger.info("Setting Mesos master address to {}", zookeeperAddress);
+        this.zookeeperAddress = zookeeperAddress;
     }
 
     /**
@@ -169,10 +169,10 @@ public class SchedulerConfiguration {
     /**
      * Handles any passed in arguments
      *
-     * @param args the master hostname/port followed by elasticSearchUrls
+     * @param args zookeeper address, followed by elasticSearchUrls
      */
     public void parseLaunchArguments(String[] args) {
-        setMesosMasterAddress(args[0]);
+        setZookeeperAddress(args[0]);
         for (int i = 1; i < args.length; i++) {
             String elasticSearchUrl = args[i];
             registerRequirement(elasticSearchUrl, 1);
