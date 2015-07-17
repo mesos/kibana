@@ -3,7 +3,7 @@ package org.apache.mesos.kibana;
 import org.apache.mesos.MesosSchedulerDriver;
 import org.apache.mesos.Protos;
 import org.apache.mesos.Scheduler;
-import org.apache.mesos.kibana.scheduler.Configuration;
+import org.apache.mesos.kibana.scheduler.SchedulerConfiguration;
 import org.apache.mesos.kibana.scheduler.KibanaScheduler;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -31,8 +31,8 @@ public class KibanaFramework {
             System.exit(1);
         }
 
-        Configuration config = new Configuration();
-        config.handleArguments(args);
+        SchedulerConfiguration config = new SchedulerConfiguration();
+        config.parseLaunchArguments(args);
 
         Protos.FrameworkInfo framework = Protos.FrameworkInfo.newBuilder()
                 .setId(Protos.FrameworkID.newBuilder().setValue("KibanaFramework"))
@@ -43,7 +43,7 @@ public class KibanaFramework {
                 .build();
 
         final Scheduler scheduler = new KibanaScheduler(config);
-        MesosSchedulerDriver driver = new MesosSchedulerDriver(scheduler, framework, config.getMasterAddress());
+        MesosSchedulerDriver driver = new MesosSchedulerDriver(scheduler, framework, config.getMesosMasterAddress());
 
         int status = driver.run() == Protos.Status.DRIVER_STOPPED ? 0 : 1;
         driver.stop();

@@ -8,6 +8,9 @@ import java.util.List;
  * A helper class for managing Mesos Resources
  */
 public class Resources {
+
+
+
     /**
      * Creates a cpu Resource with given amount of cpus
      *

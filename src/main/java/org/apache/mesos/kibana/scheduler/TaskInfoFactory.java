@@ -23,9 +23,9 @@ public class TaskInfoFactory {
      * @param configuration the scheduler's configuration, used to register the task with
      * @return a new task, ready for launch
      */
-    public static Protos.TaskInfo buildTask(Map.Entry<String, Integer> requirement, Protos.Offer offer, Configuration configuration) {
+    public static Protos.TaskInfo buildTask(Map.Entry<String, Integer> requirement, Protos.Offer offer, SchedulerConfiguration configuration) {
         Protos.TaskID taskId = generateTaskId();
-        long port = configuration.pickAndRegisterPort(taskId, offer);
+        long port = configuration.pickAndRegisterPortNumber(taskId, offer);
         Protos.ContainerInfo container = buildContainerInfo(port);
         Protos.Environment environment = buildEnvironment(requirement.getKey());
         Protos.CommandInfo command = buildCommandInfo(environment);
@@ -86,7 +86,7 @@ public class TaskInfoFactory {
         portMappingBuilder.setProtocol("tcp");
 
         DockerInfo.Builder dockerInfo = DockerInfo.newBuilder();
-        dockerInfo.setImage(Configuration.getDockerImageName());
+        dockerInfo.setImage(SchedulerConfiguration.getDockerImageName());
         dockerInfo.addPortMappings(portMappingBuilder.build());
         dockerInfo.setNetwork(Protos.ContainerInfo.DockerInfo.Network.BRIDGE);
         dockerInfo.build();
@@ -104,8 +104,8 @@ public class TaskInfoFactory {
      * @return a list of the tasks' resources
      */
     private static List<Protos.Resource> buildResources(long port) {
-        Protos.Resource cpu = Resources.cpus(Configuration.getCPU());
-        Protos.Resource mem = Resources.mem(Configuration.getMEM());
+        Protos.Resource cpu = Resources.cpus(SchedulerConfiguration.getRequiredCpu());
+        Protos.Resource mem = Resources.mem(SchedulerConfiguration.getRequiredMem());
         Protos.Resource ports = Resources.ports(port, port);
         return Arrays.asList(cpu, mem, ports);
     }

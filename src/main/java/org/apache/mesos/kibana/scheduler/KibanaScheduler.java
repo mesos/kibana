@@ -12,18 +12,18 @@ import java.util.List;
 import java.util.Map;
 
 /**
- * The Scheduler for the KibanaFramework, in charge of starting tasks on the Mesos Slaves to fulfill requirements.
+ * The Scheduler for the KibanaFramework, in charge of starting tasks on the Mesos Slaves to fulfill requiredTasks.
  */
 public class KibanaScheduler implements Scheduler {
     private static final Logger logger = LoggerFactory.getLogger(KibanaScheduler.class);
-    private Configuration configuration; // contains the scheduler's settings and tasks
+    private SchedulerConfiguration configuration; // contains the scheduler's settings and tasks
 
     /**
      * Constructor for KibanaScheduler
      *
-     * @param configuration the Configuration to use
+     * @param configuration the SchedulerConfiguration to use
      */
-    public KibanaScheduler(Configuration configuration) {
+    public KibanaScheduler(SchedulerConfiguration configuration) {
         logger.info("constructing " + KibanaScheduler.class.getName());
         this.configuration = configuration;
     }
@@ -58,15 +58,15 @@ public class KibanaScheduler implements Scheduler {
             }
         }
         if (!hasCpus) {
-            logger.info("Rejecting offer {} due to lack of cpus (required {}, got {})", offer.getId().getValue(), Configuration.getCPU(), offerCpus);
+            logger.info("Rejecting offer {} due to lack of cpus (required {}, got {})", offer.getId().getValue(), SchedulerConfiguration.getRequiredCpu(), offerCpus);
             return false;
         }
         if (!hasMem) {
-            logger.info("Rejecting offer {} due to lack of mem (required {}, got {})", offer.getId().getValue(), Configuration.getMEM(), offerMem);
+            logger.info("Rejecting offer {} due to lack of mem (required {}, got {})", offer.getId().getValue(), SchedulerConfiguration.getRequiredMem(), offerMem);
             return false;
         }
         if (!hasPorts) {
-            logger.info("Rejecting offer {} due to lack of ports (required {}, got {})", offer.getId().getValue(), Configuration.getPORTS(), offerPorts);
+            logger.info("Rejecting offer {} due to lack of ports (required {}, got {})", offer.getId().getValue(), SchedulerConfiguration.getRequiredPortCount(), offerPorts);
             return false;
         }
 
@@ -83,7 +83,7 @@ public class KibanaScheduler implements Scheduler {
      */
     private void launchNewTask(Map.Entry<String, Integer> requirement, Offer offer, SchedulerDriver driver) {
         TaskInfo task = TaskInfoFactory.buildTask(requirement, offer, configuration);
-        configuration.putRunningInstances(requirement.getKey(), task.getTaskId());
+        configuration.registerTask(requirement.getKey(), task.getTaskId());
 
         Filters filters = Filters.newBuilder().setRefuseSeconds(1).build();
         driver.launchTasks(Arrays.asList(offer.getId()), Arrays.asList(task), filters);
@@ -143,7 +143,7 @@ public class KibanaScheduler implements Scheduler {
             case TASK_FAILED:
             case TASK_FINISHED:
                 logger.info("Removing task {} due to state: {}", taskId.getValue(), taskStatus.getState());
-                configuration.removeRunningTask(taskId);
+                configuration.unregisterTask(taskId);
                 break;
         }
     }
