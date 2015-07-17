@@ -37,3 +37,8 @@ dependencies {
         [group:'org.mockito', name:'mockito-all', version: '1.10.19'],
         [group: 'junit', name: 'junit', version: '4.10'])
 }
+
+
+task wrapper(type: Wrapper) {
+    gradleVersion = '2.3'
+}
