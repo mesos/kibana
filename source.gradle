@@ -1,0 +1,40 @@
+/*
+ * Simple date function
+ */
+ext.getDate = {
+    def date = new Date()
+
+    return date.format('yyyy-MM-dd-HH.mm.ss')
+}
+
+/*
+ * Gets the version name from the latest Git tag
+ */
+ext.getVersionName = { ->
+    def stdout = new ByteArrayOutputStream()
+    def stderr = new ByteArrayOutputStream()
+    exec {
+      commandLine 'git', 'status', '-s'
+      standardOutput = stdout
+      errorOutput = stderr
+    }
+    if (stdout.toString().length()>0) {
+      return 'Private' + '-' + getDate()
+    }
+    exec {
+      ignoreExitValue = true
+      commandLine 'git', 'describe', '--tags'
+      standardOutput = stdout
+      errorOutput = stderr
+    }
+    if (stderr.toString().length()==0) {
+      return stdout.toString().trim()
+    } else {
+      exec {
+          commandLine 'git', 'log',  '--format=%h', '-n1'
+          standardOutput = stdout
+          errorOutput = stderr
+      }
+      return '0.0.0' + '-' + stdout.toString().trim()
+    }
+}
