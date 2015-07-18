@@ -6,3 +6,7 @@ gradle-app.setting
 
 # Avoid ignoring Gradle wrapper jar file (.jar files are usually ignored)
 !gradle-wrapper.jar
+
+# Files generated for the Jenkins jobs
+version.env
+

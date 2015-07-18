@@ -7,6 +7,9 @@ task setVersion {
   description  'Defines the version from the state in git'
   version = getVersionName()
   println 'Version: ' + version
+  // create a version.env file for Jenkins
+  def envFile = new File('version.env')
+  envFile.write 'VERSION=' + version +'\n'
 }
 
 group = 'org.apache.mesos.kibana'
