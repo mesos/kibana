@@ -58,7 +58,7 @@ public class KibanaScheduler implements Scheduler {
             }
         }
         if (!hasCpus) {
-            logger.info("Rejecting offer {} due to lack of cpus (required {}, got {})", offer.getId().getValue(), SchedulerConfiguration.getRequiredCpu(), offerCpus);
+            logger.info("Rejecting offer {} due to lack of cpus (required {}, got {})", offer.getId().getValue(), SchedulerConfiguration.getRequiredCpus(), offerCpus);
             return false;
         }
         if (!hasMem) {
@@ -108,6 +108,8 @@ public class KibanaScheduler implements Scheduler {
         for (Offer offer : offers) {
             if (offerIsAcceptable(offer))
                 acceptableOffers.add(offer);
+            else
+                schedulerDriver.declineOffer(offer.getId());
         }
         if (acceptableOffers.isEmpty()) return;
 
@@ -123,9 +125,24 @@ public class KibanaScheduler implements Scheduler {
                     delta--;
                 }
             } else if (delta < 0) {
-                logger.info("ElasticSearch {} has an excess of {} tasks. Removal of tasks not implemented yet.", requirement.getKey(), delta);
-                //TODO too many instances running. kill tasks. Do we do this here?
+                logger.info("ElasticSearch {} has an excess of {} tasks. Killing excess tasks.", requirement.getKey(), delta);
+                while (delta < 0) {
+                    TaskID excessTask = configuration.getYoungestTask(requirement.getKey());
+                    if (excessTask != null) {
+                        configuration.unregisterTask(excessTask);
+                        schedulerDriver.killTask(excessTask);
+                        logger.info("Killed task {}.", excessTask.getValue());
+                        delta++;
+                    } else {
+                        break;
+                    }
+
+                }
             }
+        }
+
+        for (Offer remainingOffer : acceptableOffers) {
+            schedulerDriver.declineOffer(remainingOffer.getId());
         }
     }
 

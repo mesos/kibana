@@ -104,7 +104,7 @@ public class TaskInfoFactory {
      * @return a list of the tasks' resources
      */
     private static List<Protos.Resource> buildResources(long port) {
-        Protos.Resource cpu = Resources.cpus(SchedulerConfiguration.getRequiredCpu());
+        Protos.Resource cpu = Resources.cpus(SchedulerConfiguration.getRequiredCpus());
         Protos.Resource mem = Resources.mem(SchedulerConfiguration.getRequiredMem());
         Protos.Resource ports = Resources.ports(port, port);
         return Arrays.asList(cpu, mem, ports);

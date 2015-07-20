@@ -1,5 +1,8 @@
 package org.apache.mesos.kibana.scheduler;
 
+import org.apache.commons.cli.MissingArgumentException;
+import org.apache.commons.cli.ParseException;
+import org.apache.mesos.kibana.KibanaFramework;
 import org.junit.Test;
 
 import static junit.framework.Assert.*;
@@ -15,19 +18,32 @@ public class SchedulerConfigurationTest {
      */
     public void handleArguments_parsesArguments() throws Exception {
         String hostName = "myHostName:myPort";
+        String apiPort = "9001";
         String elasticSearch1 = "myElasticSearch1:9200";
         String elasticSearch2 = "myElasticSearch2:9200";
-        String args = hostName + " " + elasticSearch1 + " " + elasticSearch2 + " " + elasticSearch2;
+        String args = "-zk " + hostName + " -p " + apiPort + " -es " + elasticSearch1 + ";" + elasticSearch2 + ";" + elasticSearch2;
         SchedulerConfiguration config = new SchedulerConfiguration();
-
         config.parseLaunchArguments(args.split(" "));
 
-        assertEquals(hostName, config.getZookeeperAddress());
+        assertEquals(hostName, config.getZookeeperUrl());
+        assertEquals(apiPort, config.getApiPort());
         assertEquals(2, config.requiredTasks.size());
         assertTrue(config.requiredTasks.containsKey(elasticSearch1));
         assertEquals(1, config.requiredTasks.get(elasticSearch1).intValue());
         assertTrue(config.requiredTasks.containsKey(elasticSearch2));
         assertEquals(2, config.requiredTasks.get(elasticSearch2).intValue());
+    }
+
+    @Test(expected=MissingArgumentException.class)
+    /**
+     * Simply tests if arguments are parsed and added to the SchedulerConfiguration nicely
+     */
+    public void handleArguments_zookeeperRequired() throws Exception {
+        String apiPort = "9001";
+        String elasticSearch = "myElasticSearch2:9200";
+        String args = " -p " + apiPort + " -es " + elasticSearch;
+        SchedulerConfiguration config = new SchedulerConfiguration();
+        config.parseLaunchArguments(args.split(" "));
     }
 
     @Test

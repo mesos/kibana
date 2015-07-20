@@ -30,7 +30,7 @@ public class KibanaSchedulerTest {
                     .setSlaveId(Protos.SlaveID.newBuilder().setValue("slave-" + i).build())
                     .setFrameworkId(Protos.FrameworkID.newBuilder().setValue("KibanaFramework").build())
                     .setHostname("localhost")
-                    .addResources(Resources.cpus(SchedulerConfiguration.getRequiredCpu()))
+                    .addResources(Resources.cpus(SchedulerConfiguration.getRequiredCpus()))
                     .addResources(Resources.mem(SchedulerConfiguration.getRequiredMem()))
                     .addResources(Resources.ports(5601L, (long) (5600L + SchedulerConfiguration.getRequiredPortCount())))
                     .build();
