@@ -5,12 +5,39 @@ apply from: 'source.gradle'
 
 task setVersion {
   description  'Defines the version from the state in git'
-  version = getVersionName()
-  println 'Version: ' + version
-  // create a version.env file for Jenkins
-  def envFile = new File('version.env')
-  envFile.write 'VERSION=' + version +'\n'
+  dependsOn 'taGit'
+  doFirst {
+    version = getVersionName()
+    println 'Version: ' + version
+    // create a version.env file for Jenkins
+    def envFile = new File('version.env')
+    envFile.write 'VERSION=' + version +'\n'
+  }
 }
+
+/*
+ * When you build a new release
+ * this task tags the repository
+ *
+ * gradle build -PtagRelease
+ *
+ */
+
+task taGit {
+  description 'Create an annotated tag on the current sha1 using the content of the file tag.txt'
+  doFirst {
+    def tagFile = new File('tag.txt')
+    def tagLines = tagFile.readLines()
+    assert 1 <= tagLines.size()
+    println 'Using: git tag -a -F ' + tagFile + ' ' + tagLines[0]
+    exec {
+      commandLine 'git', 'tag', '-a', '-F', tagFile, tagLines[0]
+    }
+  }
+
+}
+taGit.onlyIf { project.hasProperty('tagRelease') }
+
 
 group = 'org.apache.mesos.kibana'
 

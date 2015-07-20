@@ -1,0 +1,3 @@
+0.0.1
+This is the first pre-release of the kibana framework for mesos
+with limited functionality
