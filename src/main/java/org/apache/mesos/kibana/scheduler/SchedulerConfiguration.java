@@ -12,23 +12,21 @@ import java.util.*;
  * Used to manage task settings and required/running tasks.
  */
 public class SchedulerConfiguration {
-
-
     private static final Logger logger = LoggerFactory.getLogger(SchedulerConfiguration.class);
-    private static final String dockerImageName = "kibana"; // the name of Kibana Docker image to use when starting a task
-    private static final double requiredCpu = 0.1D;                 // the amount of CPUs a task needs
-    private static final double requiredMem = 128D;                 // the amount of memory a task needs
-    private static final double requiredPortCount = 1D;                 // the amount of ports a task needs
-    private static final Options options = new Options() {{
+    private static final String DOCKER_IMAGE_NAME = "kibana"; // the name of Kibana Docker image to use when starting a task
+    private static final double REQUIRED_CPU = 0.1D;         // the amount of CPUs a task needs
+    private static final double REQUIRED_MEM = 128D;         // the amount of memory a task needs
+    private static final double REQUIRED_PORT_COUNT = 1D;     // the amount of ports a task needs
+    private static final Options OPTIONS = new Options() {{ // launch OPTIONS for the KibanaFramework
         addOption("zk", "zookeeperUrl", true, "Zookeeper URL (zk://host:port/mesos)");
-        addOption("es", "elasticsearchUrls", true, "ElasticSearch URLs (http://host:port;http://host:port)");
+        addOption("es", "elasticSearchUrls", true, "ElasticSearch URLs (http://host:port;http://host:port)");
         addOption("p", "apiPort", true, "TCP port for the JSON API service (9001)");
     }};
 
     protected Map<String, Integer> requiredTasks = new HashMap<>();             // a map containing the required tasks: <elasticSearchUrl, numberOfInstances>
     protected Map<String, List<Protos.TaskID>> runningTasks = new HashMap<>();  // a map containing the currently running tasks: <elasticSearchUrl, listOfTaskIds>
-    private Map<Protos.TaskID, Long> usedPortNumbers = new HashMap<>();               // a list containing the currently used ports, part of the Docker host ports workaround
-    private String zookeeperUrl;   // the url of the Mesos zookeeper //TODO There can be multiple zookeepers..
+    private Map<Protos.TaskID, Long> usedPortNumbers = new HashMap<>();         // a list containing the currently used ports, part of the Docker host ports workaround
+    private String zookeeperUrl;   // the url of the Mesos zookeeper //TODO Test if the framework works multiple zookeepers
     private String apiPort;
 
     /**
@@ -37,16 +35,16 @@ public class SchedulerConfiguration {
      * @return the name of the Kibana Docker image
      */
     public static String getDockerImageName() {
-        return dockerImageName;
+        return DOCKER_IMAGE_NAME;
     }
 
     /**
-     * Returns the amount of requiredCpu a task needs
+     * Returns the amount of CPUs a task needs
      *
-     * @return the amount of requiredCpu a task needs
+     * @return the amount of CPUs a task needs
      */
-    public static double getRequiredCpus() {
-        return requiredCpu;
+    public static double getRequiredCpu() {
+        return REQUIRED_CPU;
     }
 
     /**
@@ -55,7 +53,7 @@ public class SchedulerConfiguration {
      * @return the amount of memory a task needs
      */
     public static double getRequiredMem() {
-        return requiredMem;
+        return REQUIRED_MEM;
     }
 
     /**
@@ -64,11 +62,11 @@ public class SchedulerConfiguration {
      * @return the amount of ports a task needs
      */
     public static double getRequiredPortCount() {
-        return requiredPortCount;
+        return REQUIRED_PORT_COUNT;
     }
 
     public static Options getOptions() {
-        return options;
+        return OPTIONS;
     }
 
     public String getApiPort() {
@@ -76,13 +74,14 @@ public class SchedulerConfiguration {
     }
 
     public void setApiPort(String apiPort) {
+        logger.info("Setting api port to {}", apiPort);
         this.apiPort = apiPort;
     }
 
     /**
-     * Returns the address of the Mesos master
+     * Returns the address of the zookeeper
      *
-     * @return the address of the Mesos master
+     * @return the address of the zookeeper
      */
     public String getZookeeperUrl() {
         return zookeeperUrl;
@@ -91,17 +90,17 @@ public class SchedulerConfiguration {
     /**
      * Sets the zookeeper address
      *
-     * @param zookeeperUrl the address of the mesos master
+     * @param zookeeperUrl the address of the zookeeper
      */
     public void setZookeeperUrl(String zookeeperUrl) {
-        logger.info("Setting Mesos master address to {}", zookeeperUrl);
+        logger.info("Setting zookeeper address to {}", zookeeperUrl);
         this.zookeeperUrl = zookeeperUrl;
     }
 
     /**
      * Picks a port number from the given offer's port resources
      *
-     * @param taskId
+     * @param taskId the TaskID to register the picked ports with
      * @param offer  the offer from which's resources to pick a port
      * @return a port number
      */
@@ -210,11 +209,13 @@ public class SchedulerConfiguration {
      * @param taskId the task to unregister
      */
     public void unregisterTask(Protos.TaskID taskId) {
-        for (List<Protos.TaskID> tasks : runningTasks.values()) {
-            if (tasks.contains(taskId)) {
-                tasks.remove(taskId);
+        for (Map.Entry<String, List<Protos.TaskID>> taskEntry : runningTasks.entrySet()) {
+            if (taskEntry.getValue().contains(taskId)) {
+                taskEntry.getValue().remove(taskId);
+                if (taskEntry.getValue().isEmpty())
+                    runningTasks.remove(taskEntry.getKey());
                 usedPortNumbers.remove(taskId);
-                logger.info("Removed task {} for ElasticSearch{}", taskId.getValue());
+                logger.info("Unregistered task {}", taskId.getValue());
                 return;
             }
         }
@@ -223,11 +224,11 @@ public class SchedulerConfiguration {
     /**
      * Handles any passed in arguments
      *
-     * @param args zookeeper address, followed by elasticSearchUrls
+     * @param args the passed in arguments
      */
     public void parseLaunchArguments(String[] args) throws ParseException {
         CommandLineParser parser = new DefaultParser();
-        CommandLine commandLine = parser.parse(options, args);
+        CommandLine commandLine = parser.parse(OPTIONS, args);
 
         String port = commandLine.getOptionValue("apiPort", "9001");
         setApiPort(port);
@@ -248,6 +249,12 @@ public class SchedulerConfiguration {
         }
     }
 
+    /**
+     * Returns the youngest task of the given elasticSearchUrl
+     *
+     * @param elasticSearchUrl the the elasticSearchUrl of which to return the youngest task
+     * @return the youngest task of the given elasticSearchUrl
+     */
     public Protos.TaskID getYoungestTask(String elasticSearchUrl) {
         if (runningTasks.containsKey(elasticSearchUrl)) {
             List<Protos.TaskID> tasks = runningTasks.get(elasticSearchUrl);

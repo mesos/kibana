@@ -12,8 +12,7 @@ import java.util.concurrent.atomic.AtomicInteger;
  * A factory class for TaskInfo
  */
 public class TaskInfoFactory {
-
-    private static final AtomicInteger taskIDGenerator = new AtomicInteger();  // used to generate task numbers
+    private static final AtomicInteger TASK_ID_GENERATOR = new AtomicInteger();  // used to generate task numbers
 
     /**
      * Creates a new task and registers it with the configuration, ready for launch.
@@ -39,7 +38,7 @@ public class TaskInfoFactory {
      * @return a new TaskID
      */
     private static Protos.TaskID generateTaskId() {
-        return Protos.TaskID.newBuilder().setValue("Kibana-" + taskIDGenerator.getAndIncrement()).build();
+        return Protos.TaskID.newBuilder().setValue("Kibana-" + TASK_ID_GENERATOR.getAndIncrement()).build();
     }
 
     /**
@@ -74,7 +73,7 @@ public class TaskInfoFactory {
     }
 
     /**
-     * Prepares the Docker ContainerInfo, adding a PortMapping for the given host port
+     * Prepares the Docker ContainerInfo, adding a PortMapping to Kibana for the given host port
      *
      * @param port the host port to direct to Kibana
      * @return the Docker ContainerInfo
@@ -104,7 +103,7 @@ public class TaskInfoFactory {
      * @return a list of the tasks' resources
      */
     private static List<Protos.Resource> buildResources(long port) {
-        Protos.Resource cpu = Resources.cpus(SchedulerConfiguration.getRequiredCpus());
+        Protos.Resource cpu = Resources.cpus(SchedulerConfiguration.getRequiredCpu());
         Protos.Resource mem = Resources.mem(SchedulerConfiguration.getRequiredMem());
         Protos.Resource ports = Resources.ports(port, port);
         return Arrays.asList(cpu, mem, ports);

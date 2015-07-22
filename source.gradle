@@ -14,27 +14,27 @@ ext.getVersionName = { ->
     def stdout = new ByteArrayOutputStream()
     def stderr = new ByteArrayOutputStream()
     exec {
-      commandLine 'git', 'status', '-s'
-      standardOutput = stdout
-      errorOutput = stderr
+        commandLine 'git', 'status', '-s'
+        standardOutput = stdout
+        errorOutput = stderr
     }
-    if (stdout.toString().length()>0) {
-      return 'Private' + '-' + getDate()
+    if (stdout.toString().length() > 0) {
+        return 'Private' + '-' + getDate()
     }
     exec {
-      ignoreExitValue = true
-      commandLine 'git', 'describe', '--tags'
-      standardOutput = stdout
-      errorOutput = stderr
+        ignoreExitValue = true
+        commandLine 'git', 'describe', '--tags'
+        standardOutput = stdout
+        errorOutput = stderr
     }
-    if (stderr.toString().length()==0) {
-      return stdout.toString().trim()
+    if (stderr.toString().length() == 0) {
+        return stdout.toString().trim()
     } else {
-      exec {
-          commandLine 'git', 'log',  '--format=%h', '-n1'
-          standardOutput = stdout
-          errorOutput = stderr
-      }
-      return '0.0.0' + '-' + stdout.toString().trim()
+        exec {
+            commandLine 'git', 'log', '--format=%h', '-n1'
+            standardOutput = stdout
+            errorOutput = stderr
+        }
+        return '0.0.0' + '-' + stdout.toString().trim()
     }
 }

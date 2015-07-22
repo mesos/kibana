@@ -12,10 +12,11 @@ import java.util.List;
 import java.util.Map;
 
 /**
- * The Scheduler for the KibanaFramework, in charge of starting tasks on the Mesos Slaves to fulfill requiredTasks.
+ * The Scheduler for the KibanaFramework, in charge of managing requests, spinning up and killing off tasks to ensure requirements are met.
  */
 public class KibanaScheduler implements Scheduler {
-    private static final Logger logger = LoggerFactory.getLogger(KibanaScheduler.class);
+    private static final Logger LOGGER = LoggerFactory.getLogger(KibanaScheduler.class);
+
     private SchedulerConfiguration configuration; // contains the scheduler's settings and tasks
 
     /**
@@ -24,7 +25,6 @@ public class KibanaScheduler implements Scheduler {
      * @param configuration the SchedulerConfiguration to use
      */
     public KibanaScheduler(SchedulerConfiguration configuration) {
-        logger.info("constructing " + KibanaScheduler.class.getName());
         this.configuration = configuration;
     }
 
@@ -34,7 +34,7 @@ public class KibanaScheduler implements Scheduler {
      * @param offer the offer whose resources to check
      * @return a boolean representing whether or not the offer has all the required resources
      */
-    private boolean offerIsAcceptable(Offer offer) {
+    protected boolean offerIsAcceptable(Offer offer) {
         boolean hasCpus = false;
         double offerCpus = 0;
         boolean hasMem = false;
@@ -58,19 +58,19 @@ public class KibanaScheduler implements Scheduler {
             }
         }
         if (!hasCpus) {
-            logger.info("Rejecting offer {} due to lack of cpus (required {}, got {})", offer.getId().getValue(), SchedulerConfiguration.getRequiredCpus(), offerCpus);
+            LOGGER.info("Offer {} does not meet requirements due to lack of cpus (need {}, got {})", offer.getId().getValue(), SchedulerConfiguration.getRequiredCpu(), offerCpus);
             return false;
         }
         if (!hasMem) {
-            logger.info("Rejecting offer {} due to lack of mem (required {}, got {})", offer.getId().getValue(), SchedulerConfiguration.getRequiredMem(), offerMem);
+            LOGGER.info("Offer {} does not meet requirements due to lack of mem (need {}, got {})", offer.getId().getValue(), SchedulerConfiguration.getRequiredMem(), offerMem);
             return false;
         }
         if (!hasPorts) {
-            logger.info("Rejecting offer {} due to lack of ports (required {}, got {})", offer.getId().getValue(), SchedulerConfiguration.getRequiredPortCount(), offerPorts);
+            LOGGER.info("Offer {} does not meet requirements due to lack of ports (need {}, got {})", offer.getId().getValue(), SchedulerConfiguration.getRequiredPortCount(), offerPorts);
             return false;
         }
 
-        logger.info("Accepting offer {} with {} cpus, {} memory and {} ports", offer.getId().getValue(), offerCpus, offerMem, offerPorts);
+        LOGGER.info("Offer {} is acceptable. (got {} cpus, {} memory and {} ports)", offer.getId().getValue(), offerCpus, offerMem, offerPorts);
         return true;
     }
 
@@ -92,18 +92,21 @@ public class KibanaScheduler implements Scheduler {
 
     @Override
     public void registered(SchedulerDriver schedulerDriver, FrameworkID frameworkID, MasterInfo masterInfo) {
-        logger.info("registered() master={}:{}, framework={}", masterInfo.getIp(), masterInfo.getPort(), frameworkID);
+        LOGGER.info("Registered at: master={}:{}, framework={}", masterInfo.getIp(), masterInfo.getPort(), frameworkID);
     }
 
     @Override
     public void reregistered(SchedulerDriver schedulerDriver, MasterInfo masterInfo) {
-        logger.info("reregistered()");
+        LOGGER.info("Reregistered.");
     }
 
+
+    // TODO Excess tasks won't be killed if the master has nothing to offer. We might want to move the killing of tasks to a separate method that can be called from the service directly
     @Override
     public void resourceOffers(SchedulerDriver schedulerDriver, List<Offer> offers) {
-        logger.info("resourceOffers() with {} offers", offers.size());
+        LOGGER.info("Offered {} offers", offers.size());
 
+        //Check which offers are acceptable
         List<Offer> acceptableOffers = new ArrayList<>();
         for (Offer offer : offers) {
             if (offerIsAcceptable(offer))
@@ -111,36 +114,37 @@ public class KibanaScheduler implements Scheduler {
             else
                 schedulerDriver.declineOffer(offer.getId());
         }
-        if (acceptableOffers.isEmpty()) return;
+        LOGGER.info("A total of {} offers were deemed acceptable.", acceptableOffers.size());
 
+        //Spin up/kill off tasks as necessary
         for (Map.Entry<String, Integer> requirement : configuration.getRequirementDeltaMap().entrySet()) {
             int delta = requirement.getValue();
             if (delta > 0) {
-                logger.info("ElasticSearch {} is missing {} tasks. Attempting to start tasks.", requirement.getKey(), delta);
+                LOGGER.info("ElasticSearch {} is missing {} tasks. Attempting to spin up required tasks.", requirement.getKey(), delta);
                 while (delta > 0) {
-                    if (acceptableOffers.isEmpty()) return;
+                    if (acceptableOffers.isEmpty()) break;
                     Offer pickedOffer = acceptableOffers.get(0);
                     launchNewTask(requirement, pickedOffer, schedulerDriver);
                     acceptableOffers.remove(pickedOffer);
                     delta--;
                 }
             } else if (delta < 0) {
-                logger.info("ElasticSearch {} has an excess of {} tasks. Killing excess tasks.", requirement.getKey(), delta);
+                LOGGER.info("ElasticSearch {} has an excess of {} tasks. Attempting to kill off excess tasks.", requirement.getKey(), delta);
                 while (delta < 0) {
                     TaskID excessTask = configuration.getYoungestTask(requirement.getKey());
-                    if (excessTask != null) {
+                    if (excessTask == null) break;
+                    else {
                         configuration.unregisterTask(excessTask);
                         schedulerDriver.killTask(excessTask);
-                        logger.info("Killed task {}.", excessTask.getValue());
+                        LOGGER.info("Killed task {}.", excessTask.getValue());
                         delta++;
-                    } else {
-                        break;
                     }
 
                 }
             }
         }
 
+        //Decline surplus offers
         for (Offer remainingOffer : acceptableOffers) {
             schedulerDriver.declineOffer(remainingOffer.getId());
         }
@@ -148,18 +152,18 @@ public class KibanaScheduler implements Scheduler {
 
     @Override
     public void offerRescinded(SchedulerDriver schedulerDriver, OfferID offerID) {
-        logger.info("offerRescinded()");
+        LOGGER.info("Offer {} rescinded.", offerID.getValue());
     }
 
     @Override
     public void statusUpdate(SchedulerDriver driver, TaskStatus taskStatus) {
         TaskID taskId = taskStatus.getTaskId();
-        logger.info("statusUpdate() task {} is in state {}", taskId.getValue(), taskStatus.getState());
+        LOGGER.info("Task {} is in state {}", taskId.getValue(), taskStatus.getState());
 
         switch (taskStatus.getState()) {
             case TASK_FAILED:
             case TASK_FINISHED:
-                logger.info("Removing task {} due to state: {}", taskId.getValue(), taskStatus.getState());
+                LOGGER.info("Unregistering task {} due to state: {}", taskId.getValue(), taskStatus.getState());
                 configuration.unregisterTask(taskId);
                 break;
         }
@@ -167,26 +171,26 @@ public class KibanaScheduler implements Scheduler {
 
     @Override
     public void frameworkMessage(SchedulerDriver schedulerDriver, ExecutorID executorID, SlaveID slaveID, byte[] bytes) {
-        logger.info("frameworkMessage()");
+        LOGGER.info("Hit frameworkMessage()");
     }
 
     @Override
     public void disconnected(SchedulerDriver schedulerDriver) {
-        logger.info("disconnected()");
+        LOGGER.info("Disconnected.");
     }
 
     @Override
     public void slaveLost(SchedulerDriver schedulerDriver, SlaveID slaveID) {
-        logger.info("slaveLost()");
+        LOGGER.info("Lost slave {}", slaveID.getValue());
     }
 
     @Override
     public void executorLost(SchedulerDriver schedulerDriver, ExecutorID executorID, SlaveID slaveID, int i) {
-        logger.info("executorLost()");
+        LOGGER.info("Lost executor {}", executorID.getValue());
     }
 
     @Override
     public void error(SchedulerDriver schedulerDriver, String s) {
-        logger.error("error() {}", s);
+        LOGGER.error("ERROR: {}", s);
     }
 }
