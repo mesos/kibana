@@ -38,6 +38,109 @@ task taGit {
 }
 taGit.onlyIf { project.hasProperty('tagRelease') }
 
+task deploy {
+  apply from: 'deploy.properties'
+
+  // ToDo: Complete for SSH set ups
+  // ToDo: Break out mesos comm in ext function
+  // ToDo: Allow image names and detect IP in docker set ups
+  // ToDo: unless elasticsearch have data add shaspear set
+  // ToDo: use the version to detremine what kibana to get from jenkins
+  def baseCmd = []
+  def dockerSys = 0
+
+  def stdout = new ByteArrayOutputStream()
+  def stderr = new ByteArrayOutputStream()
+
+  // first docker image or system w SSH
+  if (project.hasProperty('deploySSH') & deploySSH.length() > 0) {
+    println 'SSH: ' + deploySSH
+    baseCmd = ['ssh', deploySSH, '-c']
+  } else if (project.hasProperty('deployDocker') & deployDocker.length() > 0) {
+    println 'Docker: ' + deployDocker
+    dockerSys = 1
+    baseCmd = ['docker', 'exec', deployDocker]
+  } else {
+    System.err.println 'Error:\n   One of the options must be defined'
+    System.err.println '     deploySSH or deployDocker\n   in the deploy.properties file'
+    System.exit(1)
+  }
+  // second direct master address or via zookeepr
+  if (project.hasProperty('deployMaster') & deployMaster.length() >0 ) {
+    println 'Master: ' + deployMaster
+  } else if (project.hasProperty('deployZK') & deployZK.length() > 0) {
+    println 'ZK: ' + deployZK
+  } else {
+    System.err.println 'Error:\n   One of the options must be defined'
+    System.err.println '     deployMaster or deployZK\n   in the deploy.properties file'
+    System.exit(2)
+  }
+  // finally the elastic search instances
+  def esString = ''
+  if (project.hasProperty('deployES1') & deployES1.length() >0) {
+    esString = esString + ' ' + deployES1
+  }
+  if (project.hasProperty('deployES2') & deployES2.length() >0) {
+    esString = esString + ' ' + deployES2
+  }
+  if (project.hasProperty('deployES3') & deployES3.length() >0) {
+    esString = esString + ' ' + deployES3
+  }
+  if (project.hasProperty('deployES4') & deployES4.length() >0) {
+    esString = esString + ' ' + deployES4
+  }
+  if (project.hasProperty('deployES5') & deployES5.length() >0) {
+    esString = esString + ' ' + deployES5
+  }
+  if (esString.length() > 0) {
+    println 'ES: ' + esString
+  } else {
+    System.err.println 'Error:\n   One elastic search instance must be defined'
+    System.err.println '     deployESn\n   in the deploy.properties file'
+    System.exit(2)
+  }
+  // which curl
+  println 'Base:' + baseCmd
+  /*
+  exec {
+    commandLine = baseCmd + ['which', 'curl']
+    standardOutput = stdout
+    errorOutput = stderr
+  }
+  */
+  if (stderr.toString().length() ==0) {
+    if (stdout.toString().length() ==0) {
+      if (dockerSys == 1) {
+        //0 install curl
+        exec {
+          commandLine = baseCmd + ['apt-get', 'update']
+        }
+        exec {
+          commandLine = baseCmd + ['apt-get', 'install', 'curl']
+        }
+      } else {
+        println 'Please install curl on the mesos-master '
+        System.exit(1)
+      }
+    }
+  } else {
+    println 'Error: ' + stderr.toString()
+    System.exit(1)
+  }
+  // 1 curl down latest kibana  to kibana.jar
+  def latestJar = 'http://code.praqma.net/ci/view/Mesos_Kibana/job/mesos-kibana_release/lastSuccessfulBuild/artifact/build/libs/kibana-0.0.1.jar'
+  def curlCmd = baseCmd + ['curl', '-sf', latestJar, '-O']
+  println curlCmd
+  exec {
+    ignoreExitValue = true
+    commandLine = curlCmd
+  }
+  def deployCmd = baseCmd + ['java', '-jar', 'kibana-0.0.1.jar', deployMaster, esString]
+  println deployCmd
+  exec {
+    commandLine = deployCmd
+  }
+}
 
 group = 'org.apache.mesos.kibana'
 
