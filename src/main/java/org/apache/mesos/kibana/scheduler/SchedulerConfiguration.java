@@ -12,12 +12,12 @@ import java.util.*;
  * Used to manage task settings and required/running tasks.
  */
 public class SchedulerConfiguration {
-    private static final Logger logger = LoggerFactory.getLogger(SchedulerConfiguration.class);
-    private static final String DOCKER_IMAGE_NAME = "kibana"; // the name of Kibana Docker image to use when starting a task
-    private static final double REQUIRED_CPU = 0.1D;         // the amount of CPUs a task needs
-    private static final double REQUIRED_MEM = 128D;         // the amount of memory a task needs
-    private static final double REQUIRED_PORT_COUNT = 1D;     // the amount of ports a task needs
-    private static final Options OPTIONS = new Options() {{ // launch OPTIONS for the KibanaFramework
+    private static final Logger LOGGER = LoggerFactory.getLogger(SchedulerConfiguration.class);
+    private static final String DOCKER_IMAGE_NAME = "kibana";   // the name of Kibana Docker image to use when starting a task
+    private static final double REQUIRED_CPU = 0.1D;            // the amount of CPUs a task needs
+    private static final double REQUIRED_MEM = 128D;            // the amount of memory a task needs
+    private static final double REQUIRED_PORT_COUNT = 1D;       // the amount of ports a task needs
+    private static final Options OPTIONS = new Options() {{     // launch options for the KibanaFramework
         addOption("zk", "zookeeperUrl", true, "Zookeeper URL (zk://host:port/mesos)");
         addOption("es", "elasticSearchUrls", true, "ElasticSearch URLs (http://host:port;http://host:port)");
         addOption("p", "apiPort", true, "TCP port for the JSON API service (9001)");
@@ -74,7 +74,7 @@ public class SchedulerConfiguration {
     }
 
     public void setApiPort(String apiPort) {
-        logger.info("Setting api port to {}", apiPort);
+        LOGGER.info("Setting api port to {}", apiPort);
         this.apiPort = apiPort;
     }
 
@@ -93,7 +93,7 @@ public class SchedulerConfiguration {
      * @param zookeeperUrl the address of the zookeeper
      */
     public void setZookeeperUrl(String zookeeperUrl) {
-        logger.info("Setting zookeeper address to {}", zookeeperUrl);
+        LOGGER.info("Setting zookeeper address to {}", zookeeperUrl);
         this.zookeeperUrl = zookeeperUrl;
     }
 
@@ -120,6 +120,7 @@ public class SchedulerConfiguration {
                 }
             }
         }
+        LOGGER.warn("Offer {} had no unused port to offer! Task {} received no port!", offer.getId().getValue(), taskId.getValue());
         return -1;
     }
 
@@ -135,14 +136,14 @@ public class SchedulerConfiguration {
             int newAmount = amount + requiredTasks.get(elasticSearchUrl).intValue();
             if (newAmount <= 0) {
                 requiredTasks.remove(elasticSearchUrl);
-                logger.info("RequiredInstances: No more instances are required for ElasticSearch {}", elasticSearchUrl);
+                LOGGER.info("RequiredInstances: No more instances are required for ElasticSearch {}", elasticSearchUrl);
             } else {
                 requiredTasks.put(elasticSearchUrl, newAmount);
-                logger.info("RequiredInstances: Now requiring {} instances for ElasticSearch {}", newAmount, elasticSearchUrl);
+                LOGGER.info("RequiredInstances: Now requiring {} instances for ElasticSearch {}", newAmount, elasticSearchUrl);
             }
         } else if (amount > 0) {
             requiredTasks.put(elasticSearchUrl, amount);
-            logger.info("RequiredInstances: Now requiring {} instances for ElasticSearch {}", amount, elasticSearchUrl);
+            LOGGER.info("RequiredInstances: Now requiring {} instances for ElasticSearch {}", amount, elasticSearchUrl);
         }
     }
 
@@ -200,7 +201,7 @@ public class SchedulerConfiguration {
             instances.add(taskId);
             runningTasks.put(elasticSearchUrl, instances);
         }
-        logger.info("Now running task {} for ElasticSearch{}", taskId.getValue(), elasticSearchUrl);
+        LOGGER.info("Now running task {} for ElasticSearch{}", taskId.getValue(), elasticSearchUrl);
     }
 
     /**
@@ -215,7 +216,7 @@ public class SchedulerConfiguration {
                 if (taskEntry.getValue().isEmpty())
                     runningTasks.remove(taskEntry.getKey());
                 usedPortNumbers.remove(taskId);
-                logger.info("Unregistered task {}", taskId.getValue());
+                LOGGER.info("Unregistered task {}", taskId.getValue());
                 return;
             }
         }

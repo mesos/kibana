@@ -26,9 +26,9 @@ public class TestUtils {
                     .setSlaveId(Protos.SlaveID.newBuilder().setValue("slave-" + i).build())
                     .setFrameworkId(Protos.FrameworkID.newBuilder().setValue("KibanaFramework").build())
                     .setHostname("localhost")
-                    .addResources(Resources.cpus(SchedulerConfiguration.getRequiredCpu()))
-                    .addResources(Resources.mem(SchedulerConfiguration.getRequiredMem()))
-                    .addResources(Resources.ports(9000, (long) (9000 + SchedulerConfiguration.getRequiredPortCount())))
+                    .addResources(Resources.buildCpuResource(SchedulerConfiguration.getRequiredCpu()))
+                    .addResources(Resources.buildMemResource(SchedulerConfiguration.getRequiredMem()))
+                    .addResources(Resources.buildPortResource(9000, (long) (9000 + SchedulerConfiguration.getRequiredPortCount())))
                     .build();
             offers.add(offer);
         }
@@ -49,8 +49,8 @@ public class TestUtils {
                     .setSlaveId(Protos.SlaveID.newBuilder().setValue("slave-" + i).build())
                     .setFrameworkId(Protos.FrameworkID.newBuilder().setValue("KibanaFramework").build())
                     .setHostname("localhost")
-                    .addResources(Resources.cpus(SchedulerConfiguration.getRequiredCpu() / 2))
-                    .addResources(Resources.mem(SchedulerConfiguration.getRequiredMem() / 2))
+                    .addResources(Resources.buildCpuResource(SchedulerConfiguration.getRequiredCpu() / 2))
+                    .addResources(Resources.buildMemResource(SchedulerConfiguration.getRequiredMem() / 2))
                             //.addResources(Resources.ports(9000, 9000))
                     .build();
             offers.add(offer);

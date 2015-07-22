@@ -35,42 +35,44 @@ public class KibanaScheduler implements Scheduler {
      * @return a boolean representing whether or not the offer has all the required resources
      */
     protected boolean offerIsAcceptable(Offer offer) {
-        boolean hasCpus = false;
-        double offerCpus = 0;
-        boolean hasMem = false;
-        double offerMem = 0;
+        boolean hasCPUs = false;
+        double offeredCPUs = 0;
+        boolean hasMemory = false;
+        double offeredMemory = 0;
         boolean hasPorts = false;
-        int offerPorts = 0;
+        int offeredPortCount = 0;
 
         for (Resource resource : offer.getResourcesList()) {
             switch (resource.getName()) {
                 case "cpus":
-                    offerCpus = resource.getScalar().getValue();
-                    hasCpus = true;
+                    offeredCPUs = resource.getScalar().getValue();
+                    hasCPUs = true;
                     break;
                 case "mem":
-                    offerMem = resource.getScalar().getValue();
-                    hasMem = true;
+                    offeredMemory = resource.getScalar().getValue();
+                    hasMemory = true;
                     break;
                 case "ports":
-                    offerPorts = resource.getRanges().getRangeCount();
+                    offeredPortCount = Resources.getPortCount(resource);
                     hasPorts = true;
+                    break;
             }
         }
-        if (!hasCpus) {
-            LOGGER.info("Offer {} does not meet requirements due to lack of cpus (need {}, got {})", offer.getId().getValue(), SchedulerConfiguration.getRequiredCpu(), offerCpus);
+
+        if (!hasCPUs) {
+            LOGGER.info("Offer {} does not meet requirements due to lack of cpus (need {}, got {})", offer.getId().getValue(), SchedulerConfiguration.getRequiredCpu(), offeredCPUs);
             return false;
         }
-        if (!hasMem) {
-            LOGGER.info("Offer {} does not meet requirements due to lack of mem (need {}, got {})", offer.getId().getValue(), SchedulerConfiguration.getRequiredMem(), offerMem);
+        if (!hasMemory) {
+            LOGGER.info("Offer {} does not meet requirements due to lack of mem (need {}, got {})", offer.getId().getValue(), SchedulerConfiguration.getRequiredMem(), offeredMemory);
             return false;
         }
         if (!hasPorts) {
-            LOGGER.info("Offer {} does not meet requirements due to lack of ports (need {}, got {})", offer.getId().getValue(), SchedulerConfiguration.getRequiredPortCount(), offerPorts);
+            LOGGER.info("Offer {} does not meet requirements due to lack of ports (need {}, got {})", offer.getId().getValue(), SchedulerConfiguration.getRequiredPortCount(), offeredPortCount);
             return false;
         }
 
-        LOGGER.info("Offer {} is acceptable. (got {} cpus, {} memory and {} ports)", offer.getId().getValue(), offerCpus, offerMem, offerPorts);
+        LOGGER.info("Offer {} is acceptable. (got {} cpus, {} memory and {} ports)", offer.getId().getValue(), offeredCPUs, offeredMemory, offeredPortCount);
         return true;
     }
 
@@ -84,7 +86,6 @@ public class KibanaScheduler implements Scheduler {
     private void launchNewTask(Map.Entry<String, Integer> requirement, Offer offer, SchedulerDriver driver) {
         TaskInfo task = TaskInfoFactory.buildTask(requirement, offer, configuration);
         configuration.registerTask(requirement.getKey(), task.getTaskId());
-
         Filters filters = Filters.newBuilder().setRefuseSeconds(1).build();
         driver.launchTasks(Arrays.asList(offer.getId()), Arrays.asList(task), filters);
     }
