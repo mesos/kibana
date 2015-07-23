@@ -19,8 +19,8 @@ public class SchedulerConfiguration {
     private static final double REQUIRED_PORT_COUNT = 1D;       // the amount of ports a task needs
     private static final Options OPTIONS = new Options() {{     // launch options for the KibanaFramework
         addOption("m", "master", true, "Master URI (host:port)");
-        addOption("zk","zookeeper", true, "Zookeeper URL (zk://host:port/mesos)");
-        addOption("es","elasticsearch", true, "ElasticSearch URLs (http://host:port;http://host:port)");
+        addOption("zk", "zookeeper", true, "Zookeeper URL (zk://host:port/mesos)");
+        addOption("es", "elasticsearch", true, "ElasticSearch URLs (http://host:port;http://host:port)");
         addOption("p", "port", true, "TCP port for the webservice (9001)");
     }};
 
@@ -28,7 +28,7 @@ public class SchedulerConfiguration {
     protected Map<String, List<Protos.TaskID>> runningTasks = new HashMap<>();  // a map containing the currently running tasks: <elasticSearchUrl, listOfTaskIds>
     private Map<Protos.TaskID, Long> usedPortNumbers = new HashMap<>();         // a list containing the currently used ports, part of the Docker host ports workaround
     private String master;   // the url of the Mesos zookeeper //TODO Test if the framework works multiple zookeepers
-    private String apiPort;
+    private String apiPort;  // the port of the JSON API
 
     /**
      * Returns the name of the Kibana Docker image
@@ -66,14 +66,29 @@ public class SchedulerConfiguration {
         return REQUIRED_PORT_COUNT;
     }
 
+    /**
+     * Returns the start options of the KibanaFramework
+     *
+     * @return the start options of the KibanaFramework
+     */
     public static Options getOptions() {
         return OPTIONS;
     }
 
+    /**
+     * Returns the port the JSON API uses
+     *
+     * @return the port the JSON API uses
+     */
     public String getApiPort() {
         return apiPort;
     }
 
+    /**
+     * Sets the port the JSON API uses
+     *
+     * @param apiPort the port number for the JSON API to use
+     */
     public void setApiPort(String apiPort) {
         LOGGER.info("Setting api port to {}", apiPort);
         this.apiPort = apiPort;
