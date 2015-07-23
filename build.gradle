@@ -29,6 +29,7 @@ group = 'org.apache.mesos.kibana'
 task taGit {
   description 'Create an annotated tag on the current sha1 using the content of the file tag.txt'
   doFirst {
+    // ToDo: Should really use release.properties for version and message
     def tagFile = new File('tag.txt')
     def tagLines = tagFile.readLines()
     assert 1 <= tagLines.size()
@@ -42,19 +43,21 @@ task taGit {
 taGit.onlyIf { project.hasProperty('tagRelease') }
 
 task deploy {
+
+
   doFirst{
     apply from: 'deploy.properties'
 
     // ToDo: Complete for SSH set ups
-    // ToDo: Break out mesos comm in ext function
     // ToDo: Allow image names and detect IP in docker set ups
     // ToDo: unless elasticsearch have data add shaspear set
-    // ToDo: use the version to detremine what kibana to get from jenkins
+    // ToDo: add a generic "error handler" for the exec calls
     def baseCmd = []
     def dockerSys = 0
+    def mesosMaster
 
-    def stdout = new ByteArrayOutputStream()
-    def stderr = new ByteArrayOutputStream()
+    def stdout
+    def stderr
 
     // first docker image or system w SSH
     if (project.hasProperty('deploySSH') & deploySSH.length() > 0) {
@@ -71,14 +74,16 @@ task deploy {
     }
     // second direct master address or via zookeepr
     if (project.hasProperty('deployMaster') & deployMaster.length() >0 ) {
-      println 'Master: ' + deployMaster
+      mesosMaster=deployMaster
     } else if (project.hasProperty('deployZK') & deployZK.length() > 0) {
-      println 'ZK: ' + deployZK
+      mesosMaster=deployZK
     } else {
       System.err.println 'Error:\n   One of the options must be defined'
       System.err.println '     deployMaster or deployZK\n   in the deploy.properties file'
       System.exit(2)
     }
+    println 'Master: ' + mesosMaster
+
     // finally the elastic search instances
     def esString = ''
     if (project.hasProperty('deployES1') & deployES1.length() >0) {
@@ -105,44 +110,30 @@ task deploy {
     }
     // which curl
     println 'Base:' + baseCmd
-  /*
-    exec {
-      commandLine = baseCmd + ['which', 'curl']
-      standardOutput = stdout
-      errorOutput = stderr
-      }
-  */
-    if (stderr.toString().length() ==0) {
-      if (stdout.toString().length() ==0) {
+
+    (stdout, stderr) = runExec(baseCmd + ['which', 'curl'])
+    if (stderr.length() ==0) {
+      if (stdout.length() ==0) {
         if (dockerSys == 1) {
           //0 install curl
-          exec {
-            commandLine = baseCmd + ['apt-get', 'update']
-          }
-          exec {
-            commandLine = baseCmd + ['apt-get', 'install', 'curl']
-          }
+          runExec(baseCmd + ['apt-get', 'update'])
+          runExec(baseCmd + ['apt-get', 'install', 'curl'])
         } else {
           println 'Please install curl on the mesos-master '
           System.exit(1)
         }
       }
     } else {
-      println 'Error: ' + stderr.toString()
+      println 'Error: ' + stderr
       System.exit(1)
     }
     // 1 curl down latest kibana  to kibana.jar
+    // ToDo get latest kibana version from the json api of jenkins
     def latestJar = 'http://code.praqma.net/ci/view/Mesos_Kibana/job/mesos-kibana_release/lastSuccessfulBuild/artifact/build/libs/kibana-0.0.1.jar'
-    def curlCmd = baseCmd + ['curl', '-sf', latestJar, '-O']
-    println curlCmd
-    exec {
-      ignoreExitValue = true
-      commandLine = curlCmd
-    }
-    def deployCmd = baseCmd + ['java', '-jar', 'kibana-0.0.1.jar', deployMaster, esString]
-    println deployCmd
-    exec {
-      commandLine = deployCmd
+    (stdout, stderr) = runExec(baseCmd + ['curl', '-sf', latestJar, '-O'])
+
+    if (dockerSys==1) {
+      (stdout, stderr) = runExec(['docker', 'exec', '-d', deployDocker, 'java', '-jar', 'kibana-0.0.1.jar', deployMaster, esString])
     }
   }
 }

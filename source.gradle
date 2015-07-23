@@ -38,3 +38,19 @@ ext.getVersionName = { ->
         return '0.0.0' + '-' + stdout.toString().trim()
     }
 }
+
+// A generic way to run exec
+ext.runExec = {aCmdLine ->
+  def stdout = new ByteArrayOutputStream()
+  def stderr = new ByteArrayOutputStream()
+
+  println aCmdLine
+
+  exec {
+    ignoreExitValue = true
+    commandLine aCmdLine
+    standardOutput = stdout
+    errorOutput = stderr
+  }
+  return [stdout.toString(), stderr.toString()]
+}
