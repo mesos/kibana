@@ -15,10 +15,12 @@ java -jar /path-to/kibana.jar
 ```
 ##### Launch options
 ```q
--zk     -zooKeeperUrl       URL to Mesos Zookeepers/host. Required for startup.
--p      -apiPort            The TCP port for the webservice. Defaults to 9001.
--es     -elasticSearchUrls  URLs of ElasticSearch to start a Kibana for at startup.
+-m      -master          Mesos Master URI.
+-zk     -zookeeper       Mesos Zookeeper URL.
+-p      -port            The TCP port for the webservice. Defaults to 9001.
+-es     -elasticsearch   URLs of ElasticSearch to start a Kibana for at startup.
 ```
+Note: Either `-m` or `-zk` must be provided at startup.
 #### Management
 Tasks can be managed through the JSON API.
 ##### Starting and killing tasks

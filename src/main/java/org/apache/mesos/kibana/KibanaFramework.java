@@ -47,7 +47,7 @@ public class KibanaFramework {
                 .build();
 
         final Scheduler scheduler = new KibanaScheduler(configuration);
-        final MesosSchedulerDriver schedulerDriver = new MesosSchedulerDriver(scheduler, framework, configuration.getZookeeperUrl());
+        final MesosSchedulerDriver schedulerDriver = new MesosSchedulerDriver(scheduler, framework, configuration.getMaster());
 
         HashMap<String, Object> properties = new HashMap<>();
         properties.put("server.port", configuration.getApiPort());

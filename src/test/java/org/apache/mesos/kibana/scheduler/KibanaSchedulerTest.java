@@ -93,7 +93,6 @@ public class KibanaSchedulerTest {
 
         assertFalse(configuration.runningTasks.containsKey(elasticSearch1));
         assertEquals(0, configuration.runningTasks.size());
-
     }
 
 }
