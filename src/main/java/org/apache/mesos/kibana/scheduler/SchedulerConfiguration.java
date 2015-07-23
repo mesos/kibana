@@ -20,7 +20,7 @@ public class SchedulerConfiguration {
     private static final Options OPTIONS = new Options() {{     // launch options for the KibanaFramework
         addOption("zk", "zookeeperUrl", true, "Zookeeper URL (zk://host:port/mesos)");
         addOption("es", "elasticSearchUrls", true, "ElasticSearch URLs (http://host:port;http://host:port)");
-        addOption("p", "apiPort", true, "TCP port for the JSON API service (9001)");
+        addOption("p", "apiPort", true, "TCP port for the webservice (9001)");
     }};
 
     protected Map<String, Integer> requiredTasks = new HashMap<>();             // a map containing the required tasks: <elasticSearchUrl, numberOfInstances>
