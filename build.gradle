@@ -33,14 +33,16 @@ group = 'org.apache.mesos.kibana'
 task taGit {
   description 'Create an annotated tag on the current sha1 using the content of the file tag.txt'
   doFirst {
-    // ToDo: Should really use release.properties for version and message
-    def tagFile = new File('tag.txt')
-    def tagLines = tagFile.readLines()
-    assert 1 <= tagLines.size()
-    println 'Using: git tag -a -F ' + tagFile + ' ' + tagLines[0]
+    apply from: 'release.properties'
+    assert 0 < tagString.length()
+    assert 0 < tagMessage.length()
+
+    println 'Using: git tag -a -m ' + tagMessage + ' ' + tagString
+    // ToDo: Add error handling
     exec {
-      commandLine 'git', 'tag', '-a', '-F', tagFile, tagLines[0]
+      commandLine 'git', 'tag', '-a', '-m', tagMessage, tagString
     }
+
   }
 
 }

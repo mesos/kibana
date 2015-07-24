@@ -24,7 +24,7 @@ Note: Either `-m` or `-zk` must be provided at startup.
 #### Management
 Tasks can be managed through the JSON API.
 ##### Starting and killing tasks
-To spin up new or kill off excess Kibana tasks you can `POST` a `TaskRequest` JSON object to the webservice at `task/request`. 
+To spin up new or kill off excess Kibana tasks you can `POST` a `TaskRequest` JSON object to the webservice at `task/request`.
 A `TaskRequest` has an `elasticSearchUrl`, which points to the ES you want to spin up Kibana instances for, and a `delta`, which is the amount of Kibana tasks you want to start.
 
 `POST` the following to `task/request` to spin up one new instance of Kibana, pointing to the given ES:
@@ -36,7 +36,7 @@ A `TaskRequest` has an `elasticSearchUrl`, which points to the ES you want to sp
 ```
 The procedure is the same for killing off excess tasks, except a negative delta should be given. Instances are killed off in LIFO fashion.
 
-### 0.0.1 (Latest)
+### 0.0.1
 The first version of the Kibana Framework for Mesos with limited functionality.
 #### Deployment
 Copy the kibana-0.0.1.jar file onto your Mesos master and execute:
