@@ -79,6 +79,7 @@ task deploy {
     def baseCmd = []
     def dockerSys = 0
     def mesosMaster
+    def masterSwitch
 
     def stdout
     def stderr
@@ -100,8 +101,10 @@ task deploy {
     // second direct master address or via zookeepr
     if (project.hasProperty('deployMaster') & deployMaster.length() >0 ) {
       mesosMaster=deployMaster
+      masterSwitch='-m'
     } else if (project.hasProperty('deployZK') & deployZK.length() > 0) {
       mesosMaster=deployZK
+      masterSwitch='-zk'
     } else {
       System.err.println 'Error:\n   One of the options must be defined'
       System.err.println '     deployMaster or deployZK\n   in the deploy.properties file'
@@ -112,19 +115,19 @@ task deploy {
     // finally the elastic search instances
     def esString = ''
     if (project.hasProperty('deployES1') & deployES1.length() >0) {
-      esString = esString + ' ' + deployES1
+      esString = deployES1
     }
     if (project.hasProperty('deployES2') & deployES2.length() >0) {
-      esString = esString + ' ' + deployES2
+      esString = esString + ',' + deployES2
     }
     if (project.hasProperty('deployES3') & deployES3.length() >0) {
-      esString = esString + ' ' + deployES3
+      esString = esString + ',' + deployES3
     }
     if (project.hasProperty('deployES4') & deployES4.length() >0) {
-      esString = esString + ' ' + deployES4
+      esString = esString + ',' + deployES4
     }
     if (project.hasProperty('deployES5') & deployES5.length() >0) {
-      esString = esString + ' ' + deployES5
+      esString = esString + ',' + deployES5
     }
     if (esString.length() > 0) {
       println 'ES: ' + esString
@@ -157,7 +160,7 @@ task deploy {
     (stdout, stderr) = runExec(baseCmd + ['curl', '-sf', ciLatestJar, '-o', 'kibana.jar'])
 
     if (dockerSys==1) {
-      (stdout, stderr) = runExec(['docker', 'exec', '-d', deployDocker, 'java', '-jar', 'kibana.jar', deployMaster, esString])
+      (stdout, stderr) = runExec(['docker', 'exec', '-d', deployDocker, 'java', '-jar', 'kibana.jar', masterSwitch, mesosMaster, '-es', esString])
     }
   }
 }
