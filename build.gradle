@@ -4,6 +4,10 @@ apply plugin: 'spring-boot'
 
 apply from: 'source.gradle'
 
+apply from: 'ci.properties'
+
+import groovy.json.JsonSlurper
+
 task setVersion {
   description  'Defines the version from the state in git'
   dependsOn 'taGit'
@@ -42,8 +46,26 @@ task taGit {
 }
 taGit.onlyIf { project.hasProperty('tagRelease') }
 
+// ToDo: Move this task to a method
+task json {
+  // ToDo: add a switch to select release or verify-builds
+  def jsonUrl = ciRelease + ciJsonTree
+  def jsonTxt = jsonUrl.toURL().text
+
+  println jsonTxt
+
+  def jsonSlurper = new JsonSlurper()
+  def json = jsonSlurper.parseText(jsonTxt)
+
+  println json.builds.artifacts.relativePath[0][0]
+
+  ciLatestJar = ciRelease + ciLastArtifacts + json.builds.artifacts.relativePath[0][0]
+  println ciLatestJar
+}
+
 task deploy {
 
+  dependsOn 'json'
 
   doFirst{
     apply from: 'deploy.properties'
@@ -59,6 +81,7 @@ task deploy {
     def stdout
     def stderr
 
+    // ToDo: split this in 3 separate funtions in source.gradle
     // first docker image or system w SSH
     if (project.hasProperty('deploySSH') & deploySSH.length() > 0) {
       println 'SSH: ' + deploySSH
@@ -128,12 +151,11 @@ task deploy {
       System.exit(1)
     }
     // 1 curl down latest kibana  to kibana.jar
-    // ToDo get latest kibana version from the json api of jenkins
-    def latestJar = 'http://code.praqma.net/ci/view/Mesos_Kibana/job/mesos-kibana_release/lastSuccessfulBuild/artifact/build/libs/kibana-0.0.1.jar'
-    (stdout, stderr) = runExec(baseCmd + ['curl', '-sf', latestJar, '-O'])
+    println ciLatestJar
+    (stdout, stderr) = runExec(baseCmd + ['curl', '-sf', ciLatestJar, '-o', 'kibana.jar'])
 
     if (dockerSys==1) {
-      (stdout, stderr) = runExec(['docker', 'exec', '-d', deployDocker, 'java', '-jar', 'kibana-0.0.1.jar', deployMaster, esString])
+      (stdout, stderr) = runExec(['docker', 'exec', '-d', deployDocker, 'java', '-jar', 'kibana.jar', deployMaster, esString])
     }
   }
 }
