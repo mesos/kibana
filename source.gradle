@@ -46,11 +46,33 @@ ext.runExec = {aCmdLine ->
 
   println aCmdLine
 
-  exec {
+  def result = exec {
     ignoreExitValue = true
     commandLine aCmdLine
     standardOutput = stdout
     errorOutput = stderr
   }
-  return [stdout.toString(), stderr.toString()]
+  println result
+
+  if (result.failure == null) {
+    return [stdout.toString(), '']
+  } else {
+    return [stdout.toString(), stderr.toString()]
+  }
+}
+
+// A generic way to handle using runExec above
+// for the cases when exit on error is the only action
+ext.execErrorHandler = {execOutput, errorCode = 1 ->
+  def stdout
+  def stderr
+
+  (stdout, stderr) = execOutput
+  if (stderr.length() > 0){
+    println stderr
+    System.exit(errorCode)
+  } else if (stdout.length() > 0){
+    println stdout
+  }
+
 }
