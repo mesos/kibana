@@ -52,27 +52,25 @@ ext.runExec = {aCmdLine ->
     standardOutput = stdout
     errorOutput = stderr
   }
-  println result
+  logger.info(result.toString())
 
-  if (result.failure == null) {
-    return [stdout.toString(), '']
-  } else {
-    return [stdout.toString(), stderr.toString()]
-  }
+  return [result.exitValue, stdout.toString(), stderr.toString()]
 }
 
 // A generic way to handle using runExec above
 // for the cases when exit on error is the only action
 ext.execErrorHandler = {execOutput, errorCode = 1 ->
+  def exitCode
   def stdout
   def stderr
 
-  (stdout, stderr) = execOutput
-  if (stderr.length() > 0){
+  (exitCode, stdout, stderr) = execOutput
+  if (exitCode > 0){
     println stderr
     System.exit(errorCode)
-  } else if (stdout.length() > 0){
-    println stdout
+  }
+  if (stdout.length() > 0){
+    logger.info(stdout)
   }
 
 }

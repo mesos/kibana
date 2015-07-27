@@ -48,26 +48,43 @@ task taGit {
 }
 taGit.onlyIf { project.hasProperty('tagRelease') }
 
-// ToDo: Move this task to a method
-task json {
-  // ToDo: add a switch to select release or verify-builds
-  def jsonUrl = ciRelease + ciJsonTree
+task latestBuild {
+  def jsonUrl = ''
+
+  if (project.hasProperty('verifyBuild')) {
+    logger.info('Verify')
+    jsonUrl = ciVerify + ciJsonTree
+  } else {
+    logger.info('Release')
+    jsonUrl = ciRelease + ciJsonTree
+  }
   def jsonTxt = jsonUrl.toURL().text
 
-  println jsonTxt
+  logger.debug(jsonTxt)
 
   def jsonSlurper = new JsonSlurper()
   def json = jsonSlurper.parseText(jsonTxt)
 
-  println json.builds.artifacts.relativePath[0][0]
+  def relativePath
+  for (artifact in json.lastSuccessfulBuild.artifacts) {
+    logger.debug(artifact.toString())
+    if (artifact.fileName =~ /kibana.*jar/) {
+      relativePath = artifact.relativePath
+    }
+  }
+  assert 0 < relativePath.length()
 
-  ciLatestJar = ciRelease + ciLastArtifacts + json.builds.artifacts.relativePath[0][0]
-  println ciLatestJar
+  if (project.hasProperty('verifyBuild')) {
+    ciLatestJar = ciVerify + ciLastArtifacts + relativePath
+  } else {
+    ciLatestJar = ciRelease + ciLastArtifacts + relativePath
+  }
+  logger.info(ciLatestJar)
 }
 
 task deploy {
 
-  dependsOn 'json'
+  dependsOn 'latestBuild'
 
   doFirst{
     apply from: 'deploy.properties'
@@ -138,7 +155,8 @@ task deploy {
     // which curl
     println 'Base:' + baseCmd
 
-    (stdout, stderr) = runExec(baseCmd + ['which', 'curl'])
+    def exitCode
+    (exitCode, stdout, stderr) = runExec(baseCmd + ['which', 'curl'])
     if (stderr.length() ==0) {
       if (stdout.length() ==0) {
         if (dockerSys == 1) {
