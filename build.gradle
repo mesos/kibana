@@ -90,7 +90,6 @@ task deploy {
     apply from: 'deploy.properties'
 
     // ToDo: Complete for SSH set ups
-    // ToDo: Allow image names and detect IP in docker set ups
     // ToDo: unless elasticsearch have data add shaspear set
     def baseCmd = []
     def dockerSys = 0
@@ -119,7 +118,7 @@ task deploy {
       mesosMaster=deployMaster
       masterSwitch='-m'
     } else if (project.hasProperty('deployZK') & deployZK.length() > 0) {
-      mesosMaster=deployZK
+      mesosMaster='zk://' + deployZK + '/mesos'
       masterSwitch='-zk'
     } else {
       System.err.println 'Error:\n   One of the options must be defined'
@@ -128,22 +127,43 @@ task deploy {
     }
     println 'Master: ' + mesosMaster
 
+    def checkHostIP = {inputString ->
+      def parts = inputString.split(':')
+      assert 3 == parts.size()
+
+      def result = new ByteArrayOutputStream()
+      exec {
+        ignoreExitValue = true
+        commandLine = baseCmd + ['grep', '-m', '1', parts[1], '/etc/hosts']
+        standardOutput = result
+      }
+      def rString = result.toString().trim()
+      logger.info('/etc/hosts: ' + rString)
+      if (rString.length() > 0) {
+        def hostRecord = rString.tokenize('\t')
+        println hostRecord[0]
+        return parts[0]+'://'+hostRecord[0]+':'+parts[2]
+      } else {
+        return parts[0]+'://'+parts[1]+':'+parts[2]
+      }
+    }
+
     // finally the elastic search instances
     def esString = ''
     if (project.hasProperty('deployES1') & deployES1.length() >0) {
-      esString = deployES1
+      esString = checkHostIP(deployES1)
     }
     if (project.hasProperty('deployES2') & deployES2.length() >0) {
-      esString = esString + ',' + deployES2
+      esString = esString + ',' + checkHostIP(deployES2)
     }
     if (project.hasProperty('deployES3') & deployES3.length() >0) {
-      esString = esString + ',' + deployES3
+      esString = esString + ',' + checkHostIP(deployES3)
     }
     if (project.hasProperty('deployES4') & deployES4.length() >0) {
-      esString = esString + ',' + deployES4
+      esString = esString + ',' + checkHostIP(deployES4)
     }
     if (project.hasProperty('deployES5') & deployES5.length() >0) {
-      esString = esString + ',' + deployES5
+      esString = esString + ',' + checkHostIP(deployES5)
     }
     if (esString.length() > 0) {
       println 'ES: ' + esString
