@@ -177,20 +177,15 @@ task deploy {
 
     def exitCode
     (exitCode, stdout, stderr) = runExec(baseCmd + ['which', 'curl'])
-    if (stderr.length() ==0) {
-      if (stdout.length() ==0) {
-        if (dockerSys == 1) {
-          //0 install curl
-          execErrorHandler(runExec(baseCmd + ['apt-get', 'update']))
-          execErrorHandler(runExec(baseCmd + ['apt-get', 'install', 'curl']))
-        } else {
-          println 'Please install curl on the mesos-master '
-          System.exit(1)
-        }
+    if (exitCode == 1) {
+      if (dockerSys == 1) {
+        //0 install curl
+        execErrorHandler(runExec(baseCmd + ['apt-get', 'update']))
+        execErrorHandler(runExec(baseCmd + ['apt-get', 'install', 'curl']))
+      } else {
+        println 'Please install curl on the mesos-master '
+        System.exit(1)
       }
-    } else {
-      println 'Error: ' + stderr
-      System.exit(1)
     }
     // 1 curl down latest kibana  to kibana.jar
     println ciLatestJar

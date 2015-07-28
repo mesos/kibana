@@ -66,11 +66,11 @@ ext.execErrorHandler = {execOutput, errorCode = 1 ->
 
   (exitCode, stdout, stderr) = execOutput
   if (exitCode > 0){
-    println stderr
+    println 'Error: ' + exitCode + ' ' +stderr
     System.exit(errorCode)
   }
   if (stdout.length() > 0){
     logger.info(stdout)
   }
-
+  return [stdout, stderr]
 }
