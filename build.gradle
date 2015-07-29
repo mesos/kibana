@@ -49,6 +49,7 @@ task taGit {
 taGit.onlyIf { project.hasProperty('tagRelease') }
 
 task latestBuild {
+  description 'Looks up the latest build in Jenkins (ci.properties)'
   def jsonUrl = ''
 
   if (project.hasProperty('verifyBuild')) {
@@ -83,7 +84,7 @@ task latestBuild {
 }
 
 task deploy {
-
+  description 'Deploys the latest release (deploy.properties). Add `-PverifyBuild` for latest verification build'
   dependsOn 'latestBuild'
 
   doFirst{
