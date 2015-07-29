@@ -5,6 +5,29 @@ Kibana Framework for Mesos.
 The kibana framwork is developed with a simple approach, for each instance of elasticsearch in use one can have one or more instances of kibana running to serve the users.
 
 Each instance of kibana run as a docker image in the mesos cluster, thus docker containers must be supported by the mesos-slaves.
+
+## Roadmap
+
+### Features
+- [ ] Slave attribute handling.
+- [ ] UI status interface.
+- [ ] Json management service interface.
+
+### Testing
+- [ ] Extended unit testing.
+- [ ] Extended functional testing.
+- [ ] System testing, ELK on Mesos.
+
+### Miscellaneous
+- [ ] DCOS CLI support.
+
+### CoDe
+- [ ] Deploy over ssh.
+- [ ] Publish artifacts.
+    - [ ] gradle publish.
+- [ ] Extend deploy to use artifacts.
+- [ ] Support deploy on Marathon frameworks.
+
 ## Pre-releases
 During development the latest pre-release can be downloaded [here](http://code.praqma.net/ci/view/Mesos_Kibana/job/mesos-kibana_release/lastSuccessfulBuild/artifact/build/libs/).
 
