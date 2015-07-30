@@ -6,7 +6,7 @@ apply from: 'source.gradle'
 
 apply from: 'ci.properties'
 
-import groovy.json.JsonSlurper
+
 
 task setVersion {
   description  'Defines the version from the state in git'
@@ -59,12 +59,7 @@ task latestBuild {
     logger.info('Release')
     jsonUrl = ciRelease + ciJsonTree
   }
-  def jsonTxt = jsonUrl.toURL().text
-
-  logger.debug(jsonTxt)
-
-  def jsonSlurper = new JsonSlurper()
-  def json = jsonSlurper.parseText(jsonTxt)
+  def json = getJson(jsonUrl)
 
   def relativePath
   for (artifact in json.lastSuccessfulBuild.artifacts) {
@@ -195,6 +190,51 @@ task deploy {
     if (dockerSys==1) {
       execErrorHandler(runExec(['docker', 'exec', '-d', deployDocker, 'java', '-jar', 'kibana.jar', masterSwitch, mesosMaster, '-es', esString]))
     }
+  }
+}
+
+task check4kibana {
+  description 'Queries the mesos master for tasks running kibana'
+  // ToDo: Add a check that this returns the expected result(s)
+  doFirst {
+    def active
+    def ip
+    apply from: 'deploy.properties'
+    if (deployDocker.length() > 0){
+      //look for the docker-machine ip
+      def result = new ByteArrayOutputStream()
+      exec {
+        ignoreExitValue = true
+        commandLine = ['docker-machine', 'active']
+        standardOutput = result
+      }
+      active=result.toString().trim()
+      assert 0 < active.length()
+      println 'Active docker-machine: ' + active
+      result.reset()
+      exec {
+        ignoreExitValue = true
+        commandLine = ['docker-machine', 'ip', active]
+        standardOutput = result
+      }
+      ip = result.toString().trim()
+
+      } else {
+        // ip is given by properties
+        ip = deploySSH
+      }
+      assert 0 < ip.length()
+      println 'With ip-adrdress: ' + ip
+
+      //ToDo: move this to a method in source.gradle
+      def jsonUrl = 'http://'+ip+':5050/master/tasks.json'
+      def json = getJson(jsonUrl)
+      for (task in json.tasks) {
+        if (task.framework_id == 'KibanaFramework' ){
+          println task.id + ' using ports ' + task.resources.ports + ' on: ' + task.slave_id
+        }
+      }
+
   }
 }
 
