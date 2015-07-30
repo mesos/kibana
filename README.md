@@ -43,6 +43,18 @@ _Different continuous delivery improvements, mostly related to gradle tasks_.
 - [ ] Support deploy on Marathon frameworks.
 
 
+# Requirements
+
+FIXME
+* Mesos framework? 
+* Spring framework?
+* Marathon?
+* Demo version repository
+
+## Build system and dependencies
+
+The framework have been build an verified on Jenkins CI server, using a slave with Ubuntu Linux  currently... FIXME
+
 # Pre-releases
 
 During development the latest pre-release can be downloaded from our [mesos-kibana_release](http://code.praqma.net/ci/view/All/job/mesos-kibana_release) Jenkins  job artifact (or this [direct link](http://code.praqma.net/ci/view/All/job/mesos-kibana_release/lastSuccessfulBuild/artifact/build/libs/).
