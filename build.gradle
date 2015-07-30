@@ -52,28 +52,33 @@ task latestBuild {
   description 'Looks up the latest build in Jenkins (ci.properties)'
   def jsonUrl = ''
 
-  if (project.hasProperty('verifyBuild')) {
-    logger.info('Verify')
-    jsonUrl = ciVerify + ciJsonTree
+  if (project.hasProperty('verifyBuild') & verifyBuild.toString().length() > 0) {
+    println verifyBuild
+    ciLatestJar=verifyBuild
   } else {
-    logger.info('Release')
-    jsonUrl = ciRelease + ciJsonTree
-  }
-  def json = getJson(jsonUrl)
-
-  def relativePath
-  for (artifact in json.lastSuccessfulBuild.artifacts) {
-    logger.debug(artifact.toString())
-    if (artifact.fileName =~ /kibana.*jar/) {
-      relativePath = artifact.relativePath
+    if (project.hasProperty('verifyBuild')) {
+      logger.info('Verify')
+      jsonUrl = ciVerify + ciJsonTree
+    } else {
+      logger.info('Release')
+      jsonUrl = ciRelease + ciJsonTree
     }
-  }
-  assert 0 < relativePath.length()
+    def json = getJson(jsonUrl)
 
-  if (project.hasProperty('verifyBuild')) {
-    ciLatestJar = ciVerify + ciLastArtifacts + relativePath
-  } else {
-    ciLatestJar = ciRelease + ciLastArtifacts + relativePath
+    def relativePath
+    for (artifact in json.lastSuccessfulBuild.artifacts) {
+      logger.debug(artifact.toString())
+      if (artifact.fileName =~ /kibana.*jar/) {
+        relativePath = artifact.relativePath
+      }
+    }
+    assert 0 < relativePath.length()
+
+    if (project.hasProperty('verifyBuild')) {
+      ciLatestJar = ciVerify + ciLastArtifacts + relativePath
+    } else {
+      ciLatestJar = ciRelease + ciLastArtifacts + relativePath
+    }
   }
   logger.info(ciLatestJar)
 }
