@@ -52,10 +52,13 @@ task latestBuild {
   description 'Looks up the latest build in Jenkins (ci.properties)'
   def jsonUrl = ''
 
-  if (project.hasProperty('verifyBuild') & verifyBuild.toString().length() > 0) {
-    println verifyBuild
-    ciLatestJar=verifyBuild
-  } else {
+  if (project.hasProperty('verifyBuild')) {
+    if(verifyBuild.toString().length() > 0) {
+      println verifyBuild
+      ciLatestJar=verifyBuild
+    }
+  }
+  if(ciLatestJar.length() == 0) {
     if (project.hasProperty('verifyBuild')) {
       logger.info('Verify')
       jsonUrl = ciVerify + ciJsonTree
