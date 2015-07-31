@@ -8,12 +8,11 @@ Each instance of kibana run as a docker image in the mesos cluster, thus docker 
 
 # Bits and pieces
 
-FIXME
+Beside the Mesos Kibana framework itself, few other scripts, services and small solutions have been created:
 
-* demo repositor and jenkins job
-* gradle and tasks
-* The _simple JSON service_
-* ...
+* Using Gradle (instead of Maven) to _build, deploy, test etc._
+* The _simple JSON service_ that can be used to interact with the Mesos Kibana framework, e.g. start new Kibana instances.
+* A [Mesos Kibana demo](https://github.com/Praqma/mesos-kibana-demo) project, that contain examples and the infrastructure used for testing. Use it to deploy a Mesos cluster using docker, to test and demonstrate the Mesos Kibana framework.
 
 _Notice this readme explain current state of this repository (master branch), and may not match releases in all details. Check the readme file for specific releases_.
 
@@ -45,15 +44,15 @@ _Different continuous delivery improvements, mostly related to gradle tasks_.
 
 # Requirements
 
-FIXME
-* Mesos framework? 
-* Spring framework?
-* Marathon?
-* Demo version repository
+The `dependencies` section in the `build.gradle` file states the build dependencies, among other the Mesos version.
 
 ## Build system and dependencies
 
-The framework have been build an verified on Jenkins CI server, using a slave with Ubuntu Linux  currently... FIXME
+[Mesos Kibana demo](https://github.com/Praqma/mesos-kibana-demo) uses Docker version 1.7.1, docker-machine 0.3.0 , docker-compose 1.3.2.
+
+Build are done on Ubuntu Linux 12.04 32-bit, while testing that uses docker are done on Ubuntu 14.04 64-bit.
+To our best knowledge there is no specific dependencyrequirement to those platform, except from tools used like Gradle (just requires a JVM) and docker tools.
+
 
 # Pre-releases
 
@@ -61,7 +60,7 @@ During development the latest pre-release can be downloaded from our [mesos-kiba
 
 # Deployment
 
-From versio 0.1.0.
+From version 0.1.0.
 
 ## Deploy using gradle
 Currently deploying is supported for docker based mesos clusters. The task takes it's settings from the `deploy.properties` file, the default values matches a docker cluster created using `docker-compose` in the [kibana-mesos-demo](https://github.com/Praqma/mesos-kibana-demo) repository.
