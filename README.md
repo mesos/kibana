@@ -2,7 +2,7 @@
 
 [Kibana](https://www.elastic.co/products/kibana) framework for Mesos.
 
-The kibana framework is developed with a simple approach: For each instance of elasticsearch know by the framework, one or more instances of kibana can be deployed to serve the users.
+The kibana framework is developed with a simple approach: For each instance of elasticsearch known by the framework, one or more instances of kibana can be deployed to serve the users.
 
 Each instance of kibana run as a docker image in the mesos cluster, thus docker containers must be supported by the mesos-slaves.
 
@@ -26,7 +26,7 @@ _Notice this readme explain current state of this repository (master branch), an
 ## Testing
 - [ ] **Extended unit testing**. _Primarily using the Mesos test framework and best-practices for testing frameworks. Currently tests are very simple_.
 - [ ] **Extended functional testing.** _More use-case oriented testing, for example verifying framework behaves as expected on requests to the JSON service_.
-- [ ] **System testing, ELK on Mesos.** _An overall demo and test of ELK on Mesos, using the two other frameworks for [LogStash](https://github.com/mesos/logstash) and [Elasticsearch](https://github.com/mesos/elasticsearch) to provide a complet ELK stack running on Mesos_.
+- [ ] **System testing, ELK on Mesos.** _An overall demo and test of ELK on Mesos, using the two other frameworks for [LogStash](https://github.com/mesos/logstash) and [Elasticsearch](https://github.com/mesos/elasticsearch) to provide a complete ELK stack running on Mesos_.
 
 ## Miscellaneous
 - [ ] DCOS CLI support.
@@ -51,12 +51,12 @@ The `dependencies` section in the `build.gradle` file states the build dependenc
 [Mesos Kibana demo](https://github.com/Praqma/mesos-kibana-demo) uses Docker version 1.7.1, docker-machine 0.3.0 , docker-compose 1.3.2.
 
 Build are done on Ubuntu Linux 12.04 32-bit, while testing that uses docker are done on Ubuntu 14.04 64-bit.
-To our best knowledge there is no specific dependencyrequirement to those platform, except from tools used like Gradle (just requires a JVM) and docker tools.
+To our best knowledge there is no specific dependency requirement to those platforms, except from tools used like Gradle (that requires a JVM) and docker tools.
 
 
 # Pre-releases
 
-During development the latest pre-release can be downloaded from our [mesos-kibana_release](http://code.praqma.net/ci/view/All/job/mesos-kibana_release) Jenkins  job artifact (or this [direct link](http://code.praqma.net/ci/view/All/job/mesos-kibana_release/lastSuccessfulBuild/artifact/build/libs/).
+During development the latest pre-release can be downloaded from our [mesos-kibana_release](http://code.praqma.net/ci/view/All/job/mesos-kibana_release) Jenkins  job artifact (or this [direct link](http://code.praqma.net/ci/view/All/job/mesos-kibana_release/lastSuccessfulBuild/artifact/build/libs/)).
 
 # Deployment
 
@@ -88,8 +88,11 @@ java -jar /path-to/kibana.jar
 ```
 Note: Either `-m` or `-zk` must be provided at startup.
 
-FIXME - example on launch and deploy manually FIXME (based on our demo)
-FIXME - are there some default for the gradle deploy tasks?
+### Example
+With  kibana-0.1.1.jar in the tmp directory on the mesos-master, zookeeper running with hostname zookeeper and one elasticsearch instance running with ip: 172.17.0.68 the corresponding command would look like
+```
+java -jar /tmp/kibana-0.1.1.jar -zk zk://zookeeper:2181/mesos -es http://172.17.0.68:9200
+```
 
 
 # Management - interact with framework
@@ -102,14 +105,19 @@ A `TaskRequest` has an `elasticSearchUrl`, which points to the ES you want to sp
 `POST` the following to `task/request` to spin up one new instance of Kibana, pointing to the given ES:
 ```json
 {
-    "elasticSearchUrl": "http://db.fancytech.com:9200",
+    "elasticSearchUrl": "http://172.17.0.68:9200",
     "delta": 1
 }
 ```
 
 The procedure is the same for killing off excess tasks, except a negative delta should be given. Instances are killed off in LIFO fashion.
 
-FIXME - examples (based on our demo - should we extend the dcemo job with it?)
+## Example
+With a mesos-master with hostname mesosmaster and the above json snippet in a file called request.json, the following command:
+```
+curl -X POST http://mesosmaster:9001/task/request -d @request.json -H "Content-type: application/json"
+```
+would add an instance of kibana to mesos.
 
 
 # Changelog
@@ -121,7 +129,6 @@ The second release of the Kibana framework:
 
 * With gradle as build tool and gradle deploy tasks
 * The _simple JSON service_ added to interact with the framework
-* FIXME
 
 
 
