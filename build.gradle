@@ -1,0 +1,284 @@
+apply plugin: 'java'
+apply plugin: 'maven'
+apply plugin: 'spring-boot'
+
+apply from: 'source.gradle'
+
+apply from: 'ci.properties'
+
+
+
+task setVersion {
+  description  'Defines the version from the state in git'
+  dependsOn 'taGit'
+  doFirst {
+    version = getVersionName()
+    println 'Version: ' + version
+    // create a version.env file for Jenkins
+    def envFile = new File('version.env')
+    envFile.write 'VERSION=' + version +'\n'
+  }
+}
+
+group = 'org.apache.mesos.kibana'
+
+/*
+ * When you build a new release
+ * this task tags the repository
+ *
+ * gradle build -PtagRelease
+ *
+ */
+
+task taGit {
+  description 'Create an annotated tag on the current sha1 using the content of the file tag.txt'
+  doFirst {
+    apply from: 'release.properties'
+    assert 0 < tagString.length()
+    assert 0 < tagMessage.length()
+
+    println 'Using: git tag -a -m ' + tagMessage + ' ' + tagString
+    // ToDo: Add error handling
+    exec {
+      commandLine 'git', 'tag', '-a', '-m', tagMessage, tagString
+    }
+
+  }
+
+}
+taGit.onlyIf { project.hasProperty('tagRelease') }
+
+task latestBuild {
+  description 'Looks up the latest build in Jenkins (ci.properties)'
+  def jsonUrl = ''
+
+  if (project.hasProperty('verifyBuild')) {
+    if(verifyBuild.toString().length() > 0) {
+      println verifyBuild
+      ciLatestJar=verifyBuild
+    }
+  }
+  if(ciLatestJar.length() == 0) {
+    if (project.hasProperty('verifyBuild')) {
+      logger.info('Verify')
+      jsonUrl = ciVerify + ciJsonTree
+    } else {
+      logger.info('Release')
+      jsonUrl = ciRelease + ciJsonTree
+    }
+    def json = getJson(jsonUrl)
+
+    def relativePath
+    for (artifact in json.lastSuccessfulBuild.artifacts) {
+      logger.debug(artifact.toString())
+      if (artifact.fileName =~ /kibana.*jar/) {
+        relativePath = artifact.relativePath
+      }
+    }
+    assert 0 < relativePath.length()
+
+    if (project.hasProperty('verifyBuild')) {
+      ciLatestJar = ciVerify + ciLastArtifacts + relativePath
+    } else {
+      ciLatestJar = ciRelease + ciLastArtifacts + relativePath
+    }
+  }
+  logger.info(ciLatestJar)
+}
+
+task deploy {
+  description 'Deploys the latest release (deploy.properties). Add `-PverifyBuild` for latest verification build'
+  dependsOn 'latestBuild'
+
+  doFirst{
+    apply from: 'deploy.properties'
+
+    // ToDo: Complete for SSH set ups
+    // ToDo: unless elasticsearch have data add shaspear set
+    def baseCmd = []
+    def dockerSys = 0
+    def mesosMaster
+    def masterSwitch
+
+    def stdout
+    def stderr
+
+    // ToDo: split this in 3 separate funtions in source.gradle
+    // first docker image or system w SSH
+    if (project.hasProperty('deploySSH') & deploySSH.length() > 0) {
+      println 'SSH: ' + deploySSH
+      baseCmd = ['ssh', deploySSH, '-c']
+    } else if (project.hasProperty('deployDocker') & deployDocker.length() > 0) {
+      println 'Docker: ' + deployDocker
+      dockerSys = 1
+      baseCmd = ['docker', 'exec', deployDocker]
+    } else {
+      System.err.println 'Error:\n   One of the options must be defined'
+      System.err.println '     deploySSH or deployDocker\n   in the deploy.properties file'
+      System.exit(1)
+    }
+    // second direct master address or via zookeepr
+    if (project.hasProperty('deployMaster') & deployMaster.length() >0 ) {
+      mesosMaster=deployMaster
+      masterSwitch='-m'
+    } else if (project.hasProperty('deployZK') & deployZK.length() > 0) {
+      mesosMaster='zk://' + deployZK + '/mesos'
+      masterSwitch='-zk'
+    } else {
+      System.err.println 'Error:\n   One of the options must be defined'
+      System.err.println '     deployMaster or deployZK\n   in the deploy.properties file'
+      System.exit(2)
+    }
+    println 'Master: ' + mesosMaster
+
+    def checkHostIP = {inputString ->
+      def parts = inputString.split(':')
+      assert 3 == parts.size()
+
+      def result = new ByteArrayOutputStream()
+      exec {
+        ignoreExitValue = true
+        commandLine = baseCmd + ['grep', '-m', '1', parts[1], '/etc/hosts']
+        standardOutput = result
+      }
+      def rString = result.toString().trim()
+      logger.info('/etc/hosts: ' + rString)
+      if (rString.length() > 0) {
+        def hostRecord = rString.tokenize('\t')
+        println hostRecord[0]
+        return parts[0]+'://'+hostRecord[0]+':'+parts[2]
+      } else {
+        return parts[0]+'://'+parts[1]+':'+parts[2]
+      }
+    }
+
+    // finally the elastic search instances
+    def esString = ''
+    if (project.hasProperty('deployES1') & deployES1.length() >0) {
+      esString = checkHostIP(deployES1)
+    }
+    if (project.hasProperty('deployES2') & deployES2.length() >0) {
+      esString = esString + ',' + checkHostIP(deployES2)
+    }
+    if (project.hasProperty('deployES3') & deployES3.length() >0) {
+      esString = esString + ',' + checkHostIP(deployES3)
+    }
+    if (project.hasProperty('deployES4') & deployES4.length() >0) {
+      esString = esString + ',' + checkHostIP(deployES4)
+    }
+    if (project.hasProperty('deployES5') & deployES5.length() >0) {
+      esString = esString + ',' + checkHostIP(deployES5)
+    }
+    if (esString.length() > 0) {
+      println 'ES: ' + esString
+    } else {
+      System.err.println 'Error:\n   One elastic search instance must be defined'
+      System.err.println '     deployESn\n   in the deploy.properties file'
+      System.exit(2)
+    }
+    // which curl
+    println 'Base:' + baseCmd
+
+    def exitCode
+    (exitCode, stdout, stderr) = runExec(baseCmd + ['which', 'curl'])
+    if (exitCode == 1) {
+      if (dockerSys == 1) {
+        //0 install curl
+        execErrorHandler(runExec(baseCmd + ['apt-get', 'update']))
+        execErrorHandler(runExec(baseCmd + ['apt-get', 'install', 'curl']))
+      } else {
+        println 'Please install curl on the mesos-master '
+        System.exit(1)
+      }
+    }
+    // 1 curl down latest kibana  to kibana.jar
+    println ciLatestJar
+    execErrorHandler(runExec(baseCmd + ['curl', '-sf', ciLatestJar, '-o', 'kibana.jar']))
+
+    if (dockerSys==1) {
+      execErrorHandler(runExec(['docker', 'exec', '-d', deployDocker, 'java', '-jar', 'kibana.jar', masterSwitch, mesosMaster, '-es', esString]))
+    }
+  }
+}
+
+task check4kibana {
+  description 'Queries the mesos master for tasks running kibana'
+  // ToDo: Add a check that this returns the expected result(s)
+  doFirst {
+    def active
+    def ip
+    apply from: 'deploy.properties'
+    if (deployDocker.length() > 0){
+      //look for the docker-machine ip
+      def result = new ByteArrayOutputStream()
+      exec {
+        ignoreExitValue = true
+        commandLine = ['docker-machine', 'active']
+        standardOutput = result
+      }
+      active=result.toString().trim()
+      assert 0 < active.length()
+      println 'Active docker-machine: ' + active
+      result.reset()
+      exec {
+        ignoreExitValue = true
+        commandLine = ['docker-machine', 'ip', active]
+        standardOutput = result
+      }
+      ip = result.toString().trim()
+
+      } else {
+        // ip is given by properties
+        ip = deploySSH
+      }
+      assert 0 < ip.length()
+      println 'With ip-adrdress: ' + ip
+
+      //ToDo: move this to a method in source.gradle
+      def jsonUrl = 'http://'+ip+':5050/master/tasks.json'
+      def json = getJson(jsonUrl)
+      for (task in json.tasks) {
+        if (task.framework_id == 'KibanaFramework' ){
+          println task.id + ' using ports ' + task.resources.ports + ' on: ' + task.slave_id
+        }
+      }
+
+  }
+}
+
+buildscript {
+    repositories {
+        mavenCentral()
+    }
+    dependencies {
+        classpath("org.springframework.boot:spring-boot-gradle-plugin:1.2.5.RELEASE")
+    }
+}
+
+repositories {
+    mavenCentral()
+}
+
+dependencies {
+    compile(
+
+            [group: 'commons-cli', name: 'commons-cli', version: '1.3.1'],
+            [group: 'org.apache.mesos', name: 'mesos', version: '0.22.1'],
+            [group: 'org.slf4j', name: 'slf4j-api', version: '1.7.7'],
+            [group: 'org.springframework.boot', name: 'spring-boot-starter-web', version: '1.2.5.RELEASE'])
+    testCompile(
+            [group: 'org.mockito', name: 'mockito-all', version: '1.10.19'],
+            [group: 'junit', name: 'junit', version: '4.10'])
+}
+
+jar {
+    dependsOn 'setVersion'
+    from { configurations.compile.collect { it.isDirectory() ? it : zipTree(it) } } // Include dependencies
+    manifest {
+        attributes 'Main-Class': 'org.apache.mesos.kibana.KibanaFramework'
+    }
+}
+
+task wrapper(type: Wrapper) {
+    gradleVersion = '2.3'
+}

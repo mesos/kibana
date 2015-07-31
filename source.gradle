@@ -1,0 +1,93 @@
+import groovy.json.JsonSlurper
+/*
+ * Simple date function
+ */
+ext.getDate = {
+    def date = new Date()
+
+    return date.format('yyyy-MM-dd-HH.mm.ss')
+}
+
+/*
+ * Reurns the json data basen on the input URI
+ */
+ext.getJson = { jsonUri ->
+  def jsonTxt
+  try {
+    jsonTxt = jsonUri.toURL().text
+  } catch (ex) {
+    println 'Exception: ' + ex +' for ' + jsonUri
+    System.exit(1)
+  }
+  logger.debug(jsonTxt)
+  def jsonSlurper = new JsonSlurper()
+  return jsonSlurper.parseText(jsonTxt)
+}
+
+/*
+ * Gets the version name from the latest Git tag
+ */
+ext.getVersionName = { ->
+    def stdout = new ByteArrayOutputStream()
+    def stderr = new ByteArrayOutputStream()
+    exec {
+        commandLine 'git', 'status', '-s'
+        standardOutput = stdout
+        errorOutput = stderr
+    }
+    if (stdout.toString().length() > 0) {
+        return 'Private' + '-' + getDate()
+    }
+    exec {
+        ignoreExitValue = true
+        commandLine 'git', 'describe', '--tags'
+        standardOutput = stdout
+        errorOutput = stderr
+    }
+    if (stderr.toString().length() == 0) {
+        return stdout.toString().trim()
+    } else {
+        exec {
+            commandLine 'git', 'log', '--format=%h', '-n1'
+            standardOutput = stdout
+            errorOutput = stderr
+        }
+        return '0.0.0' + '-' + stdout.toString().trim()
+    }
+}
+
+// A generic way to run exec
+ext.runExec = {aCmdLine ->
+  def stdout = new ByteArrayOutputStream()
+  def stderr = new ByteArrayOutputStream()
+
+  println aCmdLine
+
+  def result = exec {
+    ignoreExitValue = true
+    commandLine aCmdLine
+    standardOutput = stdout
+    errorOutput = stderr
+  }
+  logger.info(result.toString())
+
+  return [result.exitValue, stdout.toString(), stderr.toString()]
+}
+
+// A generic way to handle using runExec above
+// for the cases when exit on error is the only action
+ext.execErrorHandler = {execOutput, errorCode = 1 ->
+  def exitCode
+  def stdout
+  def stderr
+
+  (exitCode, stdout, stderr) = execOutput
+  if (exitCode > 0){
+    println 'Error: ' + exitCode + ' ' +stderr
+    System.exit(errorCode)
+  }
+  if (stdout.length() > 0){
+    logger.info(stdout)
+  }
+  return [stdout, stderr]
+}
