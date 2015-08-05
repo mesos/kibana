@@ -16,8 +16,7 @@ import java.util.Map;
  */
 public class KibanaScheduler implements Scheduler {
     private static final Logger LOGGER = LoggerFactory.getLogger(KibanaScheduler.class);
-
-    private SchedulerConfiguration configuration; // contains the scheduler's settings and tasks
+    private final SchedulerConfiguration configuration; // contains the scheduler's settings and tasks
 
     /**
      * Constructor for KibanaScheduler
@@ -90,17 +89,16 @@ public class KibanaScheduler implements Scheduler {
         driver.launchTasks(Arrays.asList(offer.getId()), Arrays.asList(task), filters);
     }
 
-
     @Override
     public void registered(SchedulerDriver schedulerDriver, FrameworkID frameworkID, MasterInfo masterInfo) {
         LOGGER.info("Registered at: master={}:{}, framework={}", masterInfo.getIp(), masterInfo.getPort(), frameworkID);
+        configuration.getState().setFrameworkId(frameworkID);
     }
 
     @Override
     public void reregistered(SchedulerDriver schedulerDriver, MasterInfo masterInfo) {
         LOGGER.info("Reregistered.");
     }
-
 
     // TODO Excess tasks won't be killed if the master has nothing to offer. We might want to move the killing of tasks to a separate method that can be called from the service directly
     @Override

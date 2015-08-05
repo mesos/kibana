@@ -7,7 +7,9 @@ import org.apache.mesos.Protos;
 import org.apache.mesos.Scheduler;
 import org.apache.mesos.kibana.scheduler.KibanaScheduler;
 import org.apache.mesos.kibana.scheduler.SchedulerConfiguration;
+import org.apache.mesos.kibana.scheduler.State;
 import org.apache.mesos.kibana.web.KibanaFrameworkService;
+import org.apache.mesos.state.ZooKeeperState;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.boot.Banner;
@@ -40,14 +42,20 @@ public class KibanaFramework {
         }
 
         Protos.FrameworkInfo.Builder framework = Protos.FrameworkInfo.newBuilder()
-                .setId(Protos.FrameworkID.newBuilder().setValue("kibana"))//TODO: DCOS-02 Scheduler MUST persist their FrameworkID for failover.
                 .setName("kibana")
                 .setUser("")
                 .setCheckpoint(true) //DCOS-04 Scheduler MUST enable checkpointing.
                 .setFailoverTimeout(ONE_DAY_IN_SECONDS); //DCOS-01 Scheduler MUST register with a failover timeout.
 
+        State state = new State(configuration.getZookeeper());
+        configuration.setState(state);
+        Protos.FrameworkID frameworkId = state.getFrameworkId();
+        if(frameworkId != null){
+            framework.setId(frameworkId); //DCOS-02 Scheduler MUST persist their FrameworkID for failover.
+        }
+
         final Scheduler scheduler = new KibanaScheduler(configuration);
-        final MesosSchedulerDriver schedulerDriver = new MesosSchedulerDriver(scheduler, framework.build(), configuration.getMaster());
+        final MesosSchedulerDriver schedulerDriver = new MesosSchedulerDriver(scheduler, framework.build(), configuration.getZookeeper());
 
         HashMap<String, Object> properties = new HashMap<>();
         properties.put("server.port", configuration.getApiPort());

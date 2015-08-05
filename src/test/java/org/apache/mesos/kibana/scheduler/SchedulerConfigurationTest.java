@@ -15,16 +15,16 @@ public class SchedulerConfigurationTest {
      */
     @Test
     public void handleArguments_parsesArguments() throws Exception {
-        String hostName = "myHostName:myPort";
+        String zookeeper = "zk://myZookeeper:9000/myPath";
         String apiPort = "9001";
         String elasticSearch1 = "myElasticSearch1:9200";
         String elasticSearch2 = "myElasticSearch2:9200";
-        String args = "-zk " + hostName + " -p " + apiPort + " -es " + elasticSearch1 + ";" + elasticSearch2 + ";" + elasticSearch2;
+        String args = "-zk " + zookeeper + " -p " + apiPort + " -es " + elasticSearch1 + ";" + elasticSearch2 + ";" + elasticSearch2;
         SchedulerConfiguration config = new SchedulerConfiguration();
 
         config.parseLaunchArguments(args.split(" "));
 
-        assertEquals(hostName, config.getMaster());
+        assertEquals(zookeeper, config.getZookeeper());
         assertEquals(apiPort, config.getApiPort());
         assertEquals(2, config.requiredTasks.size());
         assertTrue(config.requiredTasks.containsKey(elasticSearch1));
