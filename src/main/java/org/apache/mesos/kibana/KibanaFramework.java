@@ -35,13 +35,13 @@ public class KibanaFramework {
             configuration.parseLaunchArguments(args); //DCOS-10 Configuration MUST be via CLI parameters or environment variables.
         } catch (ParseException e) {
             HelpFormatter formatter = new HelpFormatter();
-            formatter.printHelp("KibanaFramework", configuration.getOptions());
+            formatter.printHelp("kibana", configuration.getOptions());
             System.exit(1);
         }
 
         Protos.FrameworkInfo.Builder framework = Protos.FrameworkInfo.newBuilder()
-                .setId(Protos.FrameworkID.newBuilder().setValue("KibanaFramework"))//TODO: DCOS-02 Scheduler MUST persist their FrameworkID for failover.
-                .setName("KibanaFramework")
+                .setId(Protos.FrameworkID.newBuilder().setValue("kibana"))//TODO: DCOS-02 Scheduler MUST persist their FrameworkID for failover.
+                .setName("kibana")
                 .setUser("")
                 .setCheckpoint(true) //DCOS-04 Scheduler MUST enable checkpointing.
                 .setFailoverTimeout(ONE_DAY_IN_SECONDS); //DCOS-01 Scheduler MUST register with a failover timeout.
@@ -76,11 +76,11 @@ public class KibanaFramework {
         return new Banner() {
             @Override
             public void printBanner(Environment environment, Class<?> sourceClass, PrintStream out) {
-                out.print("  _  __ _  _                           _____                                                    _    \n" +
-                        " | |/ /(_)| |__    __ _  _ __    __ _ |  ___|_ __  __ _  _ __ ___    ___ __      __ ___   _ __ | | __\n" +
-                        " | ' / | || '_ \\  / _` || '_ \\  / _` || |_  | '__|/ _` || '_ ` _ \\  / _ \\\\ \\ /\\ / // _ \\ | '__|| |/ /\n" +
-                        " | . \\ | || |_) || (_| || | | || (_| ||  _| | |  | (_| || | | | | ||  __/ \\ V  V /| (_) || |   |   < \n" +
-                        " |_|\\_\\|_||_.__/  \\__,_||_| |_| \\__,_||_|   |_|   \\__,_||_| |_| |_| \\___|  \\_/\\_/  \\___/ |_|   |_|\\_\\\n");
+                out.print(  "  _  __ _  _                          \n" +
+                            " | |/ /(_)| |__    __ _  _ __    __ _ \n" +
+                            " | ' / | || '_ \\  / _` || '_ \\  / _` |\n" +
+                            " | . \\ | || |_) || (_| || | | || (_| |\n" +
+                            " |_|\\_\\|_||_.__/  \\__,_||_| |_| \\__,_|\n");
             }
         };
     }
