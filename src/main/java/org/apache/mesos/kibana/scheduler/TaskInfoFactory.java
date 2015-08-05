@@ -28,7 +28,7 @@ public class TaskInfoFactory {
         Protos.ContainerInfo container = buildContainerInfo(port);
         Protos.Environment environment = buildEnvironment(requirement.getKey());
         Protos.CommandInfo command = buildCommandInfo(environment);
-        List<Protos.Resource> resources = buildResources(port);
+        List<Protos.Resource> resources = buildResources(port); //DCOS-06 Scheduler MUST only use the necessary fraction of an offer.
         return buildTaskInfo(taskId, offer, container, command, resources);
     }
 

@@ -145,7 +145,8 @@ public class KibanaScheduler implements Scheduler {
             }
         }
 
-        //Decline surplus offers
+        // Decline surplus offers
+        // DCOS-05 Scheduler MUST decline offers it doesn’t need.
         for (Offer remainingOffer : acceptableOffers) {
             schedulerDriver.declineOffer(remainingOffer.getId());
         }

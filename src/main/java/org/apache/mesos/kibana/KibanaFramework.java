@@ -21,6 +21,7 @@ import java.util.HashMap;
 
 public class KibanaFramework {
     private static final Logger LOGGER = LoggerFactory.getLogger(KibanaFramework.class);
+    private static double ONE_DAY_IN_SECONDS = 86400D;
 
     /**
      * KibanaFramework entry point
@@ -31,23 +32,22 @@ public class KibanaFramework {
 
         final SchedulerConfiguration configuration = new SchedulerConfiguration();
         try {
-            configuration.parseLaunchArguments(args);
+            configuration.parseLaunchArguments(args); //DCOS-10 Configuration MUST be via CLI parameters or environment variables.
         } catch (ParseException e) {
             HelpFormatter formatter = new HelpFormatter();
             formatter.printHelp("KibanaFramework", configuration.getOptions());
             System.exit(1);
         }
 
-        Protos.FrameworkInfo framework = Protos.FrameworkInfo.newBuilder()
-                .setId(Protos.FrameworkID.newBuilder().setValue("KibanaFramework"))
+        Protos.FrameworkInfo.Builder framework = Protos.FrameworkInfo.newBuilder()
+                .setId(Protos.FrameworkID.newBuilder().setValue("KibanaFramework"))//TODO: DCOS-02 Scheduler MUST persist their FrameworkID for failover.
                 .setName("KibanaFramework")
                 .setUser("")
-                .setCheckpoint(true)
-                .setFailoverTimeout(10D) //in seconds
-                .build();
+                .setCheckpoint(true) //DCOS-04 Scheduler MUST enable checkpointing.
+                .setFailoverTimeout(ONE_DAY_IN_SECONDS); //DCOS-01 Scheduler MUST register with a failover timeout.
 
         final Scheduler scheduler = new KibanaScheduler(configuration);
-        final MesosSchedulerDriver schedulerDriver = new MesosSchedulerDriver(scheduler, framework, configuration.getMaster());
+        final MesosSchedulerDriver schedulerDriver = new MesosSchedulerDriver(scheduler, framework.build(), configuration.getMaster());
 
         HashMap<String, Object> properties = new HashMap<>();
         properties.put("server.port", configuration.getApiPort());
