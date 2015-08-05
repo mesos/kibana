@@ -36,7 +36,7 @@ public class State {
      */
     public State(String zookeeperUrl) {
         Matcher matcher = validateZookeeperUrl(zookeeperUrl);
-        state = new ZooKeeperState(matcher.group(1), 30000, TimeUnit.MILLISECONDS, matcher.group(2));
+        state = new ZooKeeperState(matcher.group(1), 30000, TimeUnit.MILLISECONDS, "/kibana" + matcher.group(2));
     }
 
     /**
@@ -79,7 +79,7 @@ public class State {
      * @param frameworkId the Framework ID to set
      */
     public void setFrameworkId(Protos.FrameworkID frameworkId) {
-        Variable value = null;
+        Variable value;
         try {
             value = state.fetch("frameworkId").get();
             value = value.mutate(frameworkId.toByteArray());
@@ -96,7 +96,7 @@ public class State {
      */
     public void removeFrameworkId() {
         //TODO: Call this when gracefully shutting down the scheduler.
-        Variable value = null;
+        Variable value;
         try {
             value = state.fetch("frameworkId").get();
             state.expunge(value);
