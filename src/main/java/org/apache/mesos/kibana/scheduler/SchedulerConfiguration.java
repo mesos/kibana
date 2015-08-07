@@ -13,13 +13,16 @@ import java.util.*;
  */
 public class SchedulerConfiguration {
     private static final Logger LOGGER = LoggerFactory.getLogger(SchedulerConfiguration.class);
+    private static final String FRAMEWORK_NAME = "kibana";      // the name of this Mesos framework
     private static final String DOCKER_IMAGE_NAME = "kibana";   // the name of Kibana Docker image to use when starting a task
-    private static final double REQUIRED_CPU = 0.1D;            // the amount of CPUs a task needs
-    private static final double REQUIRED_MEM = 128D;            // the amount of memory a task needs
     private static final double REQUIRED_PORT_COUNT = 1D;       // the amount of ports a task needs
+
     private static final Options OPTIONS = new Options() {{     // launch options for the KibanaFramework
         addOption("zk", "zookeeper", true, "Zookeeper URL (zk://host:port/mesos)");
         addOption("es", "elasticsearch", true, "ElasticSearch URLs (http://host:port;http://host:port)");
+        addOption("cpu", "requiredCpu", true, "Amount of CPUs given to a Kibana instance (0.1)");
+        addOption("mem", "requiredMem", true, "Amount of memory (MB) given to a Kibana instance (128)");
+        addOption("disk", "requiredDisk", true, "Amount of disk space (MB) given to a Kibana instance (20)");
         addOption("p", "port", true, "TCP port for the webservice (9001)");
     }};
 
@@ -27,8 +30,20 @@ public class SchedulerConfiguration {
     protected Map<String, List<Protos.TaskID>> runningTasks = new HashMap<>();  // a map containing the currently running tasks: <elasticSearchUrl, listOfTaskIds>
     private Map<Protos.TaskID, Long> usedPortNumbers = new HashMap<>();         // a list containing the currently used ports, part of the Docker host ports workaround
     private String zookeeper;   // the zookeeper url
-    private String apiPort;  // the port of the JSON API
-    private State state; // the state of the zookeeper
+    private String apiPort;     // the port of the JSON API
+    private State state;        // the state of the zookeeper
+    private double requiredCpu = 0.1D; // the amount of CPUs a task needs
+    private double requiredMem = 128D; // the amount of memory a task needs
+    private double requiredDisk = 25D; // the amount of disk space a task needs
+
+    /**
+     * Returns the name of the framework
+     *
+     * @return the name of the framework
+     */
+    public static String getFrameworkName() {
+        return FRAMEWORK_NAME;
+    }
 
     /**
      * Returns the name of the Kibana Docker image
@@ -37,24 +52,6 @@ public class SchedulerConfiguration {
      */
     public static String getDockerImageName() {
         return DOCKER_IMAGE_NAME;
-    }
-
-    /**
-     * Returns the amount of CPUs a task needs
-     *
-     * @return the amount of CPUs a task needs
-     */
-    public static double getRequiredCpu() {
-        return REQUIRED_CPU;
-    }
-
-    /**
-     * Returns the amount of memory a task needs
-     *
-     * @return the amount of memory a task needs
-     */
-    public static double getRequiredMem() {
-        return REQUIRED_MEM;
     }
 
     /**
@@ -73,6 +70,22 @@ public class SchedulerConfiguration {
      */
     public static Options getOptions() {
         return OPTIONS;
+    }
+
+    /**
+     * Returns the required disk space in MB a task needs
+     * @return the required disk space in MB a task needs
+     */
+    public double getRequiredDisk() {
+        return requiredDisk;
+    }
+
+    /**
+     * Sets the required disk space in MB a task needs
+     * @param requiredDisk the required disk space in MB a task needs
+     */
+    public void setRequiredDisk(double requiredDisk) {
+        this.requiredDisk = requiredDisk;
     }
 
     /**
@@ -129,6 +142,42 @@ public class SchedulerConfiguration {
      */
     public void setState(State state) {
         this.state = state;
+    }
+
+    /**
+     * Returns the amount of CPUs a task needs
+     *
+     * @return the amount of CPUs a task needs
+     */
+    public double getRequiredCpu() {
+        return requiredCpu;
+    }
+
+    /**
+     * Sets the amount of CPUs a task needs
+     *
+     * @param requiredCpu the amount of CPUs a task
+     */
+    public void setRequiredCpu(double requiredCpu) {
+        this.requiredCpu = requiredCpu;
+    }
+
+    /**
+     * Returns the amount of memory a task needs
+     *
+     * @return the amount of memory a task needs
+     */
+    public double getRequiredMem() {
+        return requiredMem;
+    }
+
+    /**
+     * Sets the amount of memory a task needs
+     *
+     * @param requiredMem the amount of memory a task needs
+     */
+    public void setRequiredMem(double requiredMem) {
+        this.requiredMem = requiredMem;
     }
 
     /**
@@ -265,15 +314,24 @@ public class SchedulerConfiguration {
         CommandLineParser parser = new DefaultParser();
         CommandLine commandLine = parser.parse(OPTIONS, args);
 
-        String port = commandLine.getOptionValue("p", "9001");
-        setApiPort(port);
-
         String zk = commandLine.getOptionValue("zk");
         if (zk != null) {
             setZookeeper(zk);
         } else {
             throw new MissingArgumentException("Zookeeper url is required.");
         }
+
+        String cpu = commandLine.getOptionValue("cpu", "0.1");
+        setRequiredCpu(Double.parseDouble(cpu));
+
+        String mem = commandLine.getOptionValue("mem", "128");
+        setRequiredMem(Double.parseDouble(mem));
+
+        String disk = commandLine.getOptionValue("disk", "25");
+        setRequiredDisk(Double.parseDouble(disk));
+
+        String port = commandLine.getOptionValue("p", "9001");
+        setApiPort(port);
 
         String esUrls = commandLine.getOptionValue("es");
         if (esUrls != null) {

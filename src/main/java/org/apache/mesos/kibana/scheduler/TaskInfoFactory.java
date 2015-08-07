@@ -28,7 +28,7 @@ public class TaskInfoFactory {
         Protos.ContainerInfo container = buildContainerInfo(port);
         Protos.Environment environment = buildEnvironment(requirement.getKey());
         Protos.CommandInfo command = buildCommandInfo(environment);
-        List<Protos.Resource> resources = buildResources(port); //DCOS-06 Scheduler MUST only use the necessary fraction of an offer.
+        List<Protos.Resource> resources = buildResources(configuration, port); //DCOS-06 Scheduler MUST only use the necessary fraction of an offer.
         return buildTaskInfo(taskId, offer, container, command, resources);
     }
 
@@ -99,14 +99,17 @@ public class TaskInfoFactory {
     /**
      * Prepares the tasks' resources
      *
+     *
+     * @param configuration
      * @param port the hosts' port that will be mapped to Kibana
      * @return a list of the tasks' resources
      */
-    private static List<Protos.Resource> buildResources(long port) {
-        Protos.Resource cpu = Resources.buildCpuResource(SchedulerConfiguration.getRequiredCpu());
-        Protos.Resource mem = Resources.buildMemResource(SchedulerConfiguration.getRequiredMem());
+    private static List<Protos.Resource> buildResources(SchedulerConfiguration configuration, long port) {
+        Protos.Resource cpu = Resources.buildCpuResource(configuration.getRequiredCpu());
+        Protos.Resource mem = Resources.buildMemResource(configuration.getRequiredMem());
+        Protos.Resource disk = Resources.buildDiskResource(configuration.getRequiredDisk());
         Protos.Resource ports = Resources.buildPortResource(port, port);
-        return Arrays.asList(cpu, mem, ports);
+        return Arrays.asList(cpu, mem, disk, ports);
     }
 
     /**

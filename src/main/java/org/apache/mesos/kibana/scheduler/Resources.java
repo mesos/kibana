@@ -24,6 +24,19 @@ public class Resources {
     }
 
     /**
+     * Creates a disk Resource with given amount of disk space
+     * @param disk required amount of disk space in MB
+     * @return a disk Resource with given amount of disk space
+     */
+    public static Protos.Resource buildDiskResource(double disk) {
+        return Protos.Resource.newBuilder()
+                .setName("disk")
+                .setType(Protos.Value.Type.SCALAR)
+                .setScalar(Protos.Value.Scalar.newBuilder().setValue(disk))
+                .build();
+    }
+
+    /**
      * Creates a mem Resource with given amount of memory
      *
      * @param memory amount of mem to assign

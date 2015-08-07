@@ -1,0 +1,8 @@
+{
+  "name": "kibana",
+  "version": "0.1.1",
+  "tags": ["mesosphere", "framework", "kibana"],
+  "maintainer": "support@praqma.com",
+  "description": "Kibana for Mesos.",
+  "scm": "https://github.com/mesos/kibana.git"
+}

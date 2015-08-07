@@ -59,15 +59,15 @@ public class KibanaScheduler implements Scheduler {
         }
 
         if (!hasCPUs) {
-            LOGGER.info("Offer {} does not meet requirements due to lack of cpus (need {}, got {})", offer.getId().getValue(), SchedulerConfiguration.getRequiredCpu(), offeredCPUs);
+            LOGGER.info("Offer {} does not meet requirements due to lack of cpus ({})", offer.getId().getValue(), offeredCPUs);
             return false;
         }
         if (!hasMemory) {
-            LOGGER.info("Offer {} does not meet requirements due to lack of mem (need {}, got {})", offer.getId().getValue(), SchedulerConfiguration.getRequiredMem(), offeredMemory);
+            LOGGER.info("Offer {} does not meet requirements due to lack of mem ({})", offer.getId().getValue(), offeredMemory);
             return false;
         }
         if (!hasPorts) {
-            LOGGER.info("Offer {} does not meet requirements due to lack of ports (need {}, got {})", offer.getId().getValue(), SchedulerConfiguration.getRequiredPortCount(), offeredPortCount);
+            LOGGER.info("Offer {} does not meet requirements due to lack of ports ({})", offer.getId().getValue(), offeredPortCount);
             return false;
         }
 

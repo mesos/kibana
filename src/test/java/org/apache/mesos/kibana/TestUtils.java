@@ -20,15 +20,17 @@ public class TestUtils {
      */
     public static List<Protos.Offer> getValidOffers(int amount) {
         List<Protos.Offer> offers = new ArrayList<>();
+        SchedulerConfiguration config = new SchedulerConfiguration();
         for (int i = 0; i < amount; i++) {
             Protos.Offer offer = Protos.Offer.newBuilder()
                     .setId(Protos.OfferID.newBuilder().setValue("valid-offer-" + i).build())
                     .setSlaveId(Protos.SlaveID.newBuilder().setValue("slave-" + i).build())
                     .setFrameworkId(Protos.FrameworkID.newBuilder().setValue("kibana").build())
                     .setHostname("localhost")
-                    .addResources(Resources.buildCpuResource(SchedulerConfiguration.getRequiredCpu()))
-                    .addResources(Resources.buildMemResource(SchedulerConfiguration.getRequiredMem()))
-                    .addResources(Resources.buildPortResource(9000, (long) (9000 + SchedulerConfiguration.getRequiredPortCount())))
+                    .addResources(Resources.buildCpuResource(config.getRequiredCpu()))
+                    .addResources(Resources.buildMemResource(config.getRequiredMem()))
+                    .addResources(Resources.buildDiskResource(config.getRequiredDisk()))
+                    .addResources(Resources.buildPortResource(9000, (long) (8999 + SchedulerConfiguration.getRequiredPortCount())))
                     .build();
             offers.add(offer);
         }
@@ -43,15 +45,16 @@ public class TestUtils {
      */
     public static List<Protos.Offer> getInvalidOffers(int amount) {
         List<Protos.Offer> offers = new ArrayList<>();
+        SchedulerConfiguration config = new SchedulerConfiguration();
         for (int i = 0; i < amount; i++) {
             Protos.Offer offer = Protos.Offer.newBuilder()
                     .setId(Protos.OfferID.newBuilder().setValue("invalid-offer-" + i).build())
                     .setSlaveId(Protos.SlaveID.newBuilder().setValue("slave-" + i).build())
                     .setFrameworkId(Protos.FrameworkID.newBuilder().setValue("kibana").build())
                     .setHostname("localhost")
-                    .addResources(Resources.buildCpuResource(SchedulerConfiguration.getRequiredCpu() / 2))
-                    .addResources(Resources.buildMemResource(SchedulerConfiguration.getRequiredMem() / 2))
-                            //.addResources(Resources.ports(9000, 9000))
+                    .addResources(Resources.buildCpuResource(config.getRequiredCpu() / 2))
+                    .addResources(Resources.buildMemResource(config.getRequiredMem() / 2))
+                    .addResources(Resources.buildDiskResource(config.getRequiredDisk() / 2))
                     .build();
             offers.add(offer);
         }

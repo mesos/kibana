@@ -37,12 +37,12 @@ public class KibanaFramework {
             configuration.parseLaunchArguments(args); //DCOS-10 Configuration MUST be via CLI parameters or environment variables.
         } catch (ParseException e) {
             HelpFormatter formatter = new HelpFormatter();
-            formatter.printHelp("kibana", configuration.getOptions());
+            formatter.printHelp(configuration.getFrameworkName(), configuration.getOptions());
             System.exit(1);
         }
 
         Protos.FrameworkInfo.Builder framework = Protos.FrameworkInfo.newBuilder()
-                .setName("kibana")
+                .setName(configuration.getFrameworkName())
                 .setUser("")
                 .setCheckpoint(true) //DCOS-04 Scheduler MUST enable checkpointing.
                 .setFailoverTimeout(ONE_DAY_IN_SECONDS); //DCOS-01 Scheduler MUST register with a failover timeout.

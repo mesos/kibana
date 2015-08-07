@@ -36,11 +36,16 @@ public class State {
      */
     public State(String zookeeperUrl) {
         Matcher matcher = validateZookeeperUrl(zookeeperUrl);
-        state = new ZooKeeperState(matcher.group(1), 30000, TimeUnit.MILLISECONDS, "/kibana" + matcher.group(2));
+        state = new ZooKeeperState(
+                matcher.group(1),
+                30000,
+                TimeUnit.MILLISECONDS,
+                "/" + SchedulerConfiguration.getFrameworkName() + matcher.group(2));
     }
 
     /**
      * Determines whether the passed in string is a valid zookeeper url or not
+     *
      * @param zookeeperUrl the zookeeper url string
      * @return the Matcher used for validating the string
      * @throws IllegalArgumentException when the String is an invalid zookeeper url.
@@ -55,6 +60,7 @@ public class State {
 
     /**
      * Returns the Framework ID stored in the Zookeeper state.
+     *
      * @return the Framework ID stored in the Zookeeper state. Null if no Framework ID was found.
      */
     public Protos.FrameworkID getFrameworkId() {
@@ -76,6 +82,7 @@ public class State {
 
     /**
      * Sets the Framework ID in the Zookeeper state
+     *
      * @param frameworkId the Framework ID to set
      */
     public void setFrameworkId(Protos.FrameworkID frameworkId) {
