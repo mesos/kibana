@@ -81,9 +81,11 @@ java -jar /path-to/kibana.jar
 
 ### Launch options
 ```
--m      -master          Mesos Master URI.
 -zk     -zookeeper       Mesos Zookeeper URL.
 -p      -port            The TCP port for the webservice. Defaults to 9001.
+-mem	-requiredMem	 The amount of memory (in MB) to allocate to a single Kibana instance.
+-cpu	-requiredCpu	 The amount of CPUs to allocate to a single Kibana instance.
+-cpu	-requiredCpu	 The amount of disk space (in MB) to allocate to a single Kibana instance.
 -es     -elasticsearch   URLs of ElasticSearch to start a Kibana for at startup.
 ```
 Note: Either `-m` or `-zk` must be provided at startup.
