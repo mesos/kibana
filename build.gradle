@@ -235,7 +235,7 @@ task check4kibana {
       def jsonUrl = 'http://'+ip+':5050/master/tasks.json'
       def json = getJson(jsonUrl)
       for (task in json.tasks) {
-        if (task.framework_id == 'kibana' ){
+        if (task.id =~ /[kK]ibana.*/ ){
           println task.id + ' using ports ' + task.resources.ports + ' on: ' + task.slave_id
         }
       }
