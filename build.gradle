@@ -117,16 +117,13 @@ task deploy {
       System.err.println '     deploySSH or deployDocker\n   in the deploy.properties file'
       System.exit(1)
     }
-    // second direct master address or via zookeepr
-    if (project.hasProperty('deployMaster') & deployMaster.length() >0 ) {
-      mesosMaster=deployMaster
-      masterSwitch='-m'
-    } else if (project.hasProperty('deployZK') & deployZK.length() > 0) {
+    // second address for the zookeepr
+    if (project.hasProperty('deployZK') & deployZK.length() > 0) {
       mesosMaster='zk://' + deployZK + '/mesos'
       masterSwitch='-zk'
     } else {
-      System.err.println 'Error:\n   One of the options must be defined'
-      System.err.println '     deployMaster or deployZK\n   in the deploy.properties file'
+      System.err.println 'Error:\n   deployZK must be defined'
+      System.err.println '     in the deploy.properties file'
       System.exit(2)
     }
     println 'Master: ' + mesosMaster
