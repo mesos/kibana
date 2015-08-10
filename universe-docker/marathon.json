@@ -1,0 +1,26 @@
+{
+  "id": "kibana",
+  "cpus": {{kibana.cpu}},
+  "mem": {{kibana.mem}},
+  "ports": [
+    {{kibana.port}}
+  ],
+  "disk": {{kibana.disk}},
+  "instances": 1,
+  "env": {
+    "ELASTICSEARCH_URL": "{{kibana.elasticSearchUrl}}"
+  },
+  "container": {
+    "type": "DOCKER",
+    "docker": {
+      "image": "kibana:latest",
+      "network": "BRIDGE",
+      "portMappings": [
+        {
+          "containerPort": 5601,
+          "hostPort": {{kibana.port}}
+        }
+      ]
+    }
+  }
+}

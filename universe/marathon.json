@@ -5,9 +5,9 @@
   "ports": [{{scheduler.port}}],
   "disk":{{scheduler.disk}},
   "instances": 1,
-  "cmd": "$(pwd)/jre*/bin/java -jar kibana-0.1.1.jar -zk {{scheduler.zookeeper}} -p {{scheduler.port}} -cpu {{kibana.cpu}} -mem {{kibana.mem}} -disk {{kibana.disk}}",
+  "cmd": "$(pwd)/jre*/bin/java -jar kibana-*.jar -zk {{scheduler.zookeeper}} -p {{scheduler.port}} -cpu {{kibana.cpu}} -mem {{kibana.mem}} -disk {{kibana.disk}}",
   "uris": [
-      "http://code.praqma.net/ci/job/mesos-kibana_release/lastSuccessfulBuild/artifact/build/libs/kibana-0.1.1.jar",
+      "http://code.praqma.net/ci/job/mesos-kibana_release/lastSuccessfulBuild/artifact/build/libs/kibana-0.2.0.jar",
       "https://downloads.mesosphere.io/java/jre-7u76-linux-x64.tar.gz"
   ]
 }

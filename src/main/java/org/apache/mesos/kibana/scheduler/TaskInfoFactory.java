@@ -38,7 +38,7 @@ public class TaskInfoFactory {
      * @return a new TaskID
      */
     private static Protos.TaskID generateTaskId() {
-        return Protos.TaskID.newBuilder().setValue("Kibana-" + TASK_ID_GENERATOR.getAndIncrement()).build();
+        return Protos.TaskID.newBuilder().setValue("kibana-" + TASK_ID_GENERATOR.getAndIncrement()).build();
     }
 
     /**

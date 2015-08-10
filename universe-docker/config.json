@@ -1,0 +1,38 @@
+{
+  "type": "object",
+  "properties": {
+    "kibana": {
+      "description": "Kibana specific configuration",
+      "properties": {
+        "elasticSearchUrl": {
+          "default": "http://localhost:9200",
+          "description": "URL of the ElasticSearch.",
+          "type": "string"
+        },
+        "cpus": {
+          "default": 0.1,
+          "description": "CPUs to allocate to a Kibana.",
+          "minimum": 0.0,
+          "type": "number"
+        },
+        "mem": {
+          "default": 64,
+          "description": "Memory (MB) to allocate  to a Kibana.",
+          "minimum": 32,
+          "type": "integer"
+        },
+        "disk": {
+          "description": "Disk (MB) to allocate to a Kibana.",
+          "type": "integer",
+          "minimum": 25,
+          "default": 25
+        },
+        "port": {
+          "description": "port to allocate to a Kibana.",
+          "type": "integer",
+          "default": 0
+        }
+      }
+    }
+  }
+}
