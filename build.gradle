@@ -10,10 +10,9 @@ apply from: 'ci.properties'
 
 task setVersion {
   description  'Defines the version from the state in git'
-  dependsOn 'taGit'
+  version = getVersionName()
+  println 'Version: ' + version
   doFirst {
-    version = getVersionName()
-    println 'Version: ' + version
     // create a version.env file for Jenkins
     def envFile = new File('version.env')
     envFile.write 'VERSION=' + version +'\n'
@@ -26,7 +25,8 @@ group = 'org.apache.mesos.kibana'
  * When you build a new release
  * this task tags the repository
  *
- * gradle build -PtagRelease
+ * gradle taGit
+ * gradle build
  *
  */
 
@@ -42,11 +42,8 @@ task taGit {
     exec {
       commandLine 'git', 'tag', '-a', '-m', tagMessage, tagString
     }
-
   }
-
 }
-taGit.onlyIf { project.hasProperty('tagRelease') }
 
 task latestBuild {
   description 'Looks up the latest build in Jenkins (ci.properties)'
@@ -269,7 +266,7 @@ jar {
     dependsOn 'setVersion'
     from { configurations.compile.collect { it.isDirectory() ? it : zipTree(it) } } // Include dependencies
     manifest {
-        attributes 'Main-Class': 'org.apache.mesos.kibana.KibanaFramework'
+        attributes 'Main-Class': 'org.apache.mesos.kibana.KibanaFramework', 'Implementation-Version': version
     }
 }
 
