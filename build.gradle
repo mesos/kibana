@@ -52,13 +52,10 @@ task latestBuild {
   description 'Looks up the latest build in Jenkins (ci.properties)'
   def jsonUrl = ''
 
-  if (project.hasProperty('verifyBuild')) {
-    if(verifyBuild.toString().length() > 0) {
-      println verifyBuild
-      ciLatestJar=verifyBuild
-    }
-  }
-  if(ciLatestJar.length() == 0) {
+  if (project.hasProperty('verifyBuild') && verifyBuild.toString().length() > 0) {
+      println verifyBuild.toString()
+      ciLatestJar=verifyBuild.toString()
+  } else  {
     if (project.hasProperty('verifyBuild')) {
       logger.info('Verify')
       jsonUrl = ciVerify + ciJsonTree
@@ -105,10 +102,10 @@ task deploy {
 
     // ToDo: split this in 3 separate funtions in source.gradle
     // first docker image or system w SSH
-    if (project.hasProperty('deploySSH') & deploySSH.length() > 0) {
+    if (project.hasProperty('deploySSH') && deploySSH.length() > 0) {
       println 'SSH: ' + deploySSH
       baseCmd = ['ssh', deploySSH, '-c']
-    } else if (project.hasProperty('deployDocker') & deployDocker.length() > 0) {
+    } else if (project.hasProperty('deployDocker') && deployDocker.length() > 0) {
       println 'Docker: ' + deployDocker
       dockerSys = 1
       baseCmd = ['docker', 'exec', deployDocker]
@@ -118,7 +115,7 @@ task deploy {
       System.exit(1)
     }
     // second address for the zookeepr
-    if (project.hasProperty('deployZK') & deployZK.length() > 0) {
+    if (project.hasProperty('deployZK') && deployZK.length() > 0) {
       mesosMaster='zk://' + deployZK + '/mesos'
       masterSwitch='-zk'
     } else {
@@ -151,19 +148,19 @@ task deploy {
 
     // finally the elastic search instances
     def esString = ''
-    if (project.hasProperty('deployES1') & deployES1.length() >0) {
+    if (project.hasProperty('deployES1') && deployES1.length() >0) {
       esString = checkHostIP(deployES1)
     }
-    if (project.hasProperty('deployES2') & deployES2.length() >0) {
+    if (project.hasProperty('deployES2') && deployES2.length() >0) {
       esString = esString + ',' + checkHostIP(deployES2)
     }
-    if (project.hasProperty('deployES3') & deployES3.length() >0) {
+    if (project.hasProperty('deployES3') && deployES3.length() >0) {
       esString = esString + ',' + checkHostIP(deployES3)
     }
-    if (project.hasProperty('deployES4') & deployES4.length() >0) {
+    if (project.hasProperty('deployES4') && deployES4.length() >0) {
       esString = esString + ',' + checkHostIP(deployES4)
     }
-    if (project.hasProperty('deployES5') & deployES5.length() >0) {
+    if (project.hasProperty('deployES5') && deployES5.length() >0) {
       esString = esString + ',' + checkHostIP(deployES5)
     }
     if (esString.length() > 0) {
