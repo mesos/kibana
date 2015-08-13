@@ -1,20 +1,21 @@
 package org.apache.mesos.kibana.scheduler;
 
 import junit.framework.TestCase;
-import org.apache.mesos.Protos;
+import org.apache.mesos.Protos.Value;
+import org.apache.mesos.Protos.Resource;
 
 /**
  * Tests for the Resources class
  */
 public class ResourcesTest extends TestCase {
     public void testGetPortCount() throws Exception {
-        Protos.Value.Ranges ranges = Protos.Value.Ranges.newBuilder()
-                .addRange(Protos.Value.Range.newBuilder().setBegin(0).setEnd(4))        // 5
-                .addRange(Protos.Value.Range.newBuilder().setBegin(11).setEnd(15))      //+5
-                .addRange(Protos.Value.Range.newBuilder().setBegin(9800).setEnd(9800))  //+1
-                .build();                                                               //=11
-        Protos.Resource ports = Protos.Resource.newBuilder()
-                .setType(Protos.Value.Type.RANGES)
+        Value.Ranges ranges = Value.Ranges.newBuilder()
+                .addRange(Value.Range.newBuilder().setBegin(0).setEnd(4))        // 5
+                .addRange(Value.Range.newBuilder().setBegin(11).setEnd(15))      //+5
+                .addRange(Value.Range.newBuilder().setBegin(9800).setEnd(9800))  //+1
+                .build();                                                        //=11
+        Resource ports = Resource.newBuilder()
+                .setType(Value.Type.RANGES)
                 .setName("ports")
                 .setRanges(ranges)
                 .build();

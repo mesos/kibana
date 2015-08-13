@@ -1,11 +1,11 @@
 package org.apache.mesos.kibana.scheduler;
 
 import com.google.protobuf.InvalidProtocolBufferException;
-import org.apache.mesos.Protos;
 import org.apache.mesos.state.Variable;
 import org.apache.mesos.state.ZooKeeperState;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.apache.mesos.Protos.FrameworkID;
 
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.TimeUnit;
@@ -63,11 +63,11 @@ public class State {
      *
      * @return the Framework ID stored in the Zookeeper state. Null if no Framework ID was found.
      */
-    public Protos.FrameworkID getFrameworkId() {
+    public FrameworkID getFrameworkId() {
         try {
             byte[] existingFrameworkId = state.fetch("frameworkId").get().value();
             if (existingFrameworkId.length > 0) {
-                Protos.FrameworkID frameworkId = Protos.FrameworkID.parseFrom(existingFrameworkId);
+                FrameworkID frameworkId = FrameworkID.parseFrom(existingFrameworkId);
                 LOGGER.info("Found FrameworkID " + frameworkId.getValue());
                 return frameworkId;
             } else {
@@ -85,7 +85,7 @@ public class State {
      *
      * @param frameworkId the Framework ID to set
      */
-    public void setFrameworkId(Protos.FrameworkID frameworkId) {
+    public void setFrameworkId(FrameworkID frameworkId) {
         Variable value;
         try {
             value = state.fetch("frameworkId").get();

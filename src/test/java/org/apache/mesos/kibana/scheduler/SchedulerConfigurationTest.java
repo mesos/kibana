@@ -25,7 +25,7 @@ public class SchedulerConfigurationTest {
         config.parseLaunchArguments(args.split(" "));
 
         assertEquals(zookeeper, config.getZookeeper());
-        assertEquals(apiPort, config.getApiPort());
+        assertEquals(9001, config.getApiPort());
         assertEquals(2, config.requiredTasks.size());
         assertTrue(config.requiredTasks.containsKey(elasticSearch1));
         assertEquals(1, config.requiredTasks.get(elasticSearch1).intValue());

@@ -1,7 +1,7 @@
 package org.apache.mesos.kibana.scheduler;
 
-import org.apache.mesos.Protos;
-
+import org.apache.mesos.Protos.Resource;
+import org.apache.mesos.Protos.Value;
 import java.util.List;
 
 /**
@@ -15,11 +15,11 @@ public class Resources {
      * @param cpus amount of cpus to assign
      * @return a cpu Resource with given amount of cpus
      */
-    public static Protos.Resource buildCpuResource(double cpus) {
-        return Protos.Resource.newBuilder()
+    public static Resource buildCpuResource(double cpus) {
+        return Resource.newBuilder()
                 .setName("cpus")
-                .setType(Protos.Value.Type.SCALAR)
-                .setScalar(Protos.Value.Scalar.newBuilder().setValue(cpus))
+                .setType(Value.Type.SCALAR)
+                .setScalar(Value.Scalar.newBuilder().setValue(cpus))
                 .build();
     }
 
@@ -28,11 +28,11 @@ public class Resources {
      * @param disk required amount of disk space in MB
      * @return a disk Resource with given amount of disk space
      */
-    public static Protos.Resource buildDiskResource(double disk) {
-        return Protos.Resource.newBuilder()
+    public static Resource buildDiskResource(double disk) {
+        return Resource.newBuilder()
                 .setName("disk")
-                .setType(Protos.Value.Type.SCALAR)
-                .setScalar(Protos.Value.Scalar.newBuilder().setValue(disk))
+                .setType(Value.Type.SCALAR)
+                .setScalar(Value.Scalar.newBuilder().setValue(disk))
                 .build();
     }
 
@@ -42,11 +42,11 @@ public class Resources {
      * @param memory amount of mem to assign
      * @return a mem Resource with given amount of memory
      */
-    public static Protos.Resource buildMemResource(double memory) {
-        return Protos.Resource.newBuilder()
+    public static Resource buildMemResource(double memory) {
+        return Resource.newBuilder()
                 .setName("mem")
-                .setType(Protos.Value.Type.SCALAR)
-                .setScalar(Protos.Value.Scalar.newBuilder().setValue(memory))
+                .setType(Value.Type.SCALAR)
+                .setScalar(Value.Scalar.newBuilder().setValue(memory))
                 .build();
     }
 
@@ -57,12 +57,12 @@ public class Resources {
      * @param end   the end of the port range
      * @return a port Resource with given port range
      */
-    public static Protos.Resource buildPortResource(long begin, long end) {
-        Protos.Value.Range ports = Protos.Value.Range.newBuilder().setBegin(begin).setEnd(end).build();
-        return Protos.Resource.newBuilder()
+    public static Resource buildPortResource(long begin, long end) {
+        Value.Range ports = Value.Range.newBuilder().setBegin(begin).setEnd(end).build();
+        return Resource.newBuilder()
                 .setName("ports")
-                .setType(Protos.Value.Type.RANGES)
-                .setRanges(Protos.Value.Ranges.newBuilder().addRange(ports))
+                .setType(Value.Type.RANGES)
+                .setRanges(Value.Ranges.newBuilder().addRange(ports))
                 .build();
     }
 
@@ -72,10 +72,10 @@ public class Resources {
      * @param resource the resource to count the ports for
      * @return the number of ports offered in the resource
      */
-    public static int getPortCount(Protos.Resource resource) {
+    public static int getPortCount(Resource resource) {
         int portCount = 0;
-        List<Protos.Value.Range> offeredRanges = resource.getRanges().getRangeList();
-        for (Protos.Value.Range portRange : offeredRanges) {
+        List<Value.Range> offeredRanges = resource.getRanges().getRangeList();
+        for (Value.Range portRange : offeredRanges) {
             long begin = portRange.getBegin();
             long end = portRange.getEnd();
             portCount += end - begin + 1;

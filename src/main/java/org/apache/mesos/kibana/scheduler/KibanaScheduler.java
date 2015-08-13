@@ -1,6 +1,16 @@
 package org.apache.mesos.kibana.scheduler;
 
-import org.apache.mesos.Protos.*;
+import org.apache.mesos.Protos.ExecutorID;
+import org.apache.mesos.Protos.Filters;
+import org.apache.mesos.Protos.FrameworkID;
+import org.apache.mesos.Protos.MasterInfo;
+import org.apache.mesos.Protos.Offer;
+import org.apache.mesos.Protos.OfferID;
+import org.apache.mesos.Protos.Resource;
+import org.apache.mesos.Protos.SlaveID;
+import org.apache.mesos.Protos.TaskID;
+import org.apache.mesos.Protos.TaskInfo;
+import org.apache.mesos.Protos.TaskStatus;
 import org.apache.mesos.Scheduler;
 import org.apache.mesos.SchedulerDriver;
 import org.slf4j.Logger;
@@ -35,10 +45,10 @@ public class KibanaScheduler implements Scheduler {
      */
     protected boolean offerIsAcceptable(Offer offer) {
         boolean hasCPUs = false;
-        double offeredCPUs = 0;
         boolean hasMemory = false;
-        double offeredMemory = 0;
         boolean hasPorts = false;
+        double offeredCPUs = 0;
+        double offeredMemory = 0;
         int offeredPortCount = 0;
 
         for (Resource resource : offer.getResourcesList()) {
@@ -143,7 +153,6 @@ public class KibanaScheduler implements Scheduler {
             }
         }
 
-        // Decline surplus offers
         // DCOS-05 Scheduler MUST decline offers it doesn’t need.
         for (Offer remainingOffer : acceptableOffers) {
             schedulerDriver.declineOffer(remainingOffer.getId());

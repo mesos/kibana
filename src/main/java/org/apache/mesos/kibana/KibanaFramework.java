@@ -3,13 +3,14 @@ package org.apache.mesos.kibana;
 import org.apache.commons.cli.HelpFormatter;
 import org.apache.commons.cli.ParseException;
 import org.apache.mesos.MesosSchedulerDriver;
-import org.apache.mesos.Protos;
+import org.apache.mesos.Protos.Status;
+import org.apache.mesos.Protos.FrameworkID;
+import org.apache.mesos.Protos.FrameworkInfo;
 import org.apache.mesos.Scheduler;
 import org.apache.mesos.kibana.scheduler.KibanaScheduler;
 import org.apache.mesos.kibana.scheduler.SchedulerConfiguration;
 import org.apache.mesos.kibana.scheduler.State;
 import org.apache.mesos.kibana.web.KibanaFrameworkService;
-import org.apache.mesos.state.ZooKeeperState;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.boot.Banner;
@@ -41,7 +42,7 @@ public class KibanaFramework {
             System.exit(1);
         }
 
-        Protos.FrameworkInfo.Builder framework = Protos.FrameworkInfo.newBuilder()
+        FrameworkInfo.Builder framework = FrameworkInfo.newBuilder()
                 .setName(configuration.getFrameworkName())
                 .setUser("")
                 .setCheckpoint(true) //DCOS-04 Scheduler MUST enable checkpointing.
@@ -49,7 +50,7 @@ public class KibanaFramework {
 
         State state = new State(configuration.getZookeeper());
         configuration.setState(state);
-        Protos.FrameworkID frameworkId = state.getFrameworkId();
+        FrameworkID frameworkId = state.getFrameworkId();
         if(frameworkId != null){
             framework.setId(frameworkId); //DCOS-02 Scheduler MUST persist their FrameworkID for failover.
         }
@@ -70,7 +71,7 @@ public class KibanaFramework {
                 })
                 .run();
 
-        int status = schedulerDriver.run() == Protos.Status.DRIVER_STOPPED ? 0 : 1;
+        int status = schedulerDriver.run() == Status.DRIVER_STOPPED ? 0 : 1;
         schedulerDriver.stop();
         System.exit(status);
     }

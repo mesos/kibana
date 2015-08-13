@@ -1,6 +1,12 @@
 package org.apache.mesos.kibana.scheduler;
 
-import org.apache.mesos.Protos;
+import org.apache.mesos.Protos.CommandInfo;
+import org.apache.mesos.Protos.ContainerInfo;
+import org.apache.mesos.Protos.Environment;
+import org.apache.mesos.Protos.Offer;
+import org.apache.mesos.Protos.Resource;
+import org.apache.mesos.Protos.TaskID;
+import org.apache.mesos.Protos.TaskInfo;
 import org.apache.mesos.Protos.ContainerInfo.DockerInfo;
 
 import java.util.Arrays;
@@ -22,13 +28,13 @@ public class TaskInfoFactory {
      * @param configuration the scheduler's configuration, used to register the task with
      * @return a new task, ready for launch
      */
-    public static Protos.TaskInfo buildTask(Map.Entry<String, Integer> requirement, Protos.Offer offer, SchedulerConfiguration configuration) {
-        Protos.TaskID taskId = generateTaskId();
+    public static TaskInfo buildTask(Map.Entry<String, Integer> requirement, Offer offer, SchedulerConfiguration configuration) {
+        TaskID taskId = generateTaskId();
         long port = configuration.pickAndRegisterPortNumber(taskId, offer);
-        Protos.ContainerInfo container = buildContainerInfo(port);
-        Protos.Environment environment = buildEnvironment(requirement.getKey());
-        Protos.CommandInfo command = buildCommandInfo(environment);
-        List<Protos.Resource> resources = buildResources(configuration, port); //DCOS-06 Scheduler MUST only use the necessary fraction of an offer.
+        ContainerInfo container = buildContainerInfo(port);
+        Environment environment = buildEnvironment(requirement.getKey());
+        CommandInfo command = buildCommandInfo(environment);
+        List<Resource> resources = buildResources(configuration, port); //DCOS-06 Scheduler MUST only use the necessary fraction of an offer.
         return buildTaskInfo(taskId, offer, container, command, resources);
     }
 
@@ -37,8 +43,8 @@ public class TaskInfoFactory {
      *
      * @return a new TaskID
      */
-    private static Protos.TaskID generateTaskId() {
-        return Protos.TaskID.newBuilder().setValue("kibana-" + TASK_ID_GENERATOR.getAndIncrement()).build();
+    private static TaskID generateTaskId() {
+        return TaskID.newBuilder().setValue("kibana-" + TASK_ID_GENERATOR.getAndIncrement()).build();
     }
 
     /**
@@ -47,8 +53,8 @@ public class TaskInfoFactory {
      * @param environment the Environment to include
      * @return the CommandInfoBuilder
      */
-    private static Protos.CommandInfo buildCommandInfo(Protos.Environment environment) {
-        Protos.CommandInfo.Builder commandInfoBuilder = Protos.CommandInfo.newBuilder();
+    private static CommandInfo buildCommandInfo(Environment environment) {
+        CommandInfo.Builder commandInfoBuilder = CommandInfo.newBuilder();
         commandInfoBuilder.setEnvironment(environment);
         commandInfoBuilder.setShell(false);
         return commandInfoBuilder.build();
@@ -60,14 +66,14 @@ public class TaskInfoFactory {
      * @param elasticSearchUrl the elasticSearchUrl to set
      * @return the Environment
      */
-    private static Protos.Environment buildEnvironment(String elasticSearchUrl) {
-        Protos.Environment.Variable.Builder esUrlVariableBuilder = Protos.Environment.Variable.newBuilder();
+    private static Environment buildEnvironment(String elasticSearchUrl) {
+        Environment.Variable.Builder esUrlVariableBuilder = Environment.Variable.newBuilder();
         esUrlVariableBuilder.setName("ELASTICSEARCH_URL");
         esUrlVariableBuilder.setValue(elasticSearchUrl);
 
-        List<Protos.Environment.Variable> variables = Arrays.asList(esUrlVariableBuilder.build());
+        List<Environment.Variable> variables = Arrays.asList(esUrlVariableBuilder.build());
 
-        Protos.Environment.Builder environmentBuilder = Protos.Environment.newBuilder();
+        Environment.Builder environmentBuilder = Environment.newBuilder();
         environmentBuilder.addAllVariables(variables);
         return environmentBuilder.build();
     }
@@ -78,7 +84,7 @@ public class TaskInfoFactory {
      * @param port the host port to direct to Kibana
      * @return the Docker ContainerInfo
      */
-    private static Protos.ContainerInfo buildContainerInfo(long port) {
+    private static ContainerInfo buildContainerInfo(long port) {
         DockerInfo.PortMapping.Builder portMappingBuilder = DockerInfo.PortMapping.newBuilder();
         portMappingBuilder.setHostPort((int) port);
         portMappingBuilder.setContainerPort(5601);
@@ -87,11 +93,11 @@ public class TaskInfoFactory {
         DockerInfo.Builder dockerInfo = DockerInfo.newBuilder();
         dockerInfo.setImage(SchedulerConfiguration.getDockerImageName());
         dockerInfo.addPortMappings(portMappingBuilder.build());
-        dockerInfo.setNetwork(Protos.ContainerInfo.DockerInfo.Network.BRIDGE);
+        dockerInfo.setNetwork(ContainerInfo.DockerInfo.Network.BRIDGE);
         dockerInfo.build();
 
-        Protos.ContainerInfo.Builder containerInfo = Protos.ContainerInfo.newBuilder();
-        containerInfo.setType(Protos.ContainerInfo.Type.DOCKER);
+        ContainerInfo.Builder containerInfo = ContainerInfo.newBuilder();
+        containerInfo.setType(ContainerInfo.Type.DOCKER);
         containerInfo.setDocker(dockerInfo);
         return containerInfo.build();
     }
@@ -104,11 +110,11 @@ public class TaskInfoFactory {
      * @param port the hosts' port that will be mapped to Kibana
      * @return a list of the tasks' resources
      */
-    private static List<Protos.Resource> buildResources(SchedulerConfiguration configuration, long port) {
-        Protos.Resource cpu = Resources.buildCpuResource(configuration.getRequiredCpu());
-        Protos.Resource mem = Resources.buildMemResource(configuration.getRequiredMem());
-        Protos.Resource disk = Resources.buildDiskResource(configuration.getRequiredDisk());
-        Protos.Resource ports = Resources.buildPortResource(port, port);
+    private static List<Resource> buildResources(SchedulerConfiguration configuration, long port) {
+        Resource cpu = Resources.buildCpuResource(configuration.getRequiredCpu());
+        Resource mem = Resources.buildMemResource(configuration.getRequiredMem());
+        Resource disk = Resources.buildDiskResource(configuration.getRequiredDisk());
+        Resource ports = Resources.buildPortResource(port, port);
         return Arrays.asList(cpu, mem, disk, ports);
     }
 
@@ -122,8 +128,8 @@ public class TaskInfoFactory {
      * @param resources     the tasks' resources
      * @return the TaskInfo
      */
-    private static Protos.TaskInfo buildTaskInfo(Protos.TaskID taskId, Protos.Offer offer, Protos.ContainerInfo containerInfo, Protos.CommandInfo commandInfo, List<Protos.Resource> resources) {
-        Protos.TaskInfo.Builder task = Protos.TaskInfo.newBuilder()
+    private static TaskInfo buildTaskInfo(TaskID taskId, Offer offer, ContainerInfo containerInfo, CommandInfo commandInfo, List<Resource> resources) {
+        TaskInfo.Builder task = TaskInfo.newBuilder()
                 .setName(taskId.getValue())
                 .setTaskId(taskId)
                 .setSlaveId(offer.getSlaveId())

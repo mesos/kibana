@@ -1,10 +1,12 @@
 package org.apache.mesos.kibana.scheduler;
 
 import org.apache.commons.cli.*;
-import org.apache.mesos.Protos;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-
+import org.apache.mesos.Protos.Offer;
+import org.apache.mesos.Protos.Resource;
+import org.apache.mesos.Protos.TaskID;
+import org.apache.mesos.Protos.Value;
 import java.util.*;
 
 /**
@@ -27,13 +29,13 @@ public class SchedulerConfiguration {
     }};
 
     protected Map<String, Integer> requiredTasks = new HashMap<>();             // a map containing the required tasks: <elasticSearchUrl, numberOfInstances>
-    protected Map<String, List<Protos.TaskID>> runningTasks = new HashMap<>();  // a map containing the currently running tasks: <elasticSearchUrl, listOfTaskIds>
-    private Map<Protos.TaskID, Long> usedPortNumbers = new HashMap<>();         // a list containing the currently used ports, part of the Docker host ports workaround
+    protected Map<String, List<TaskID>> runningTasks = new HashMap<>();  // a map containing the currently running tasks: <elasticSearchUrl, listOfTaskIds>
+    private Map<TaskID, Long> usedPortNumbers = new HashMap<>();         // a list containing the currently used ports, part of the Docker host ports workaround
     private String zookeeper;   // the zookeeper url
-    private String apiPort;     // the port of the JSON API
     private State state;        // the state of the zookeeper
-    private double requiredCpu = 0.1D; // the amount of CPUs a task needs
-    private double requiredMem = 128D; // the amount of memory a task needs
+    private int apiPort      = 9001;     // the port of the JSON API
+    private double requiredCpu  = 0.1D; // the amount of CPUs a task needs
+    private double requiredMem  = 128D; // the amount of memory a task needs
     private double requiredDisk = 25D; // the amount of disk space a task needs
 
     /**
@@ -93,7 +95,7 @@ public class SchedulerConfiguration {
      *
      * @return the port the JSON API uses
      */
-    public String getApiPort() {
+    public int getApiPort() {
         return apiPort;
     }
 
@@ -102,7 +104,7 @@ public class SchedulerConfiguration {
      *
      * @param apiPort the port number for the JSON API to use
      */
-    public void setApiPort(String apiPort) {
+    public void setApiPort(int apiPort) {
         LOGGER.info("Setting api port to {}", apiPort);
         this.apiPort = apiPort;
     }
@@ -187,12 +189,12 @@ public class SchedulerConfiguration {
      * @param offer  the offer from which's resources to pick a port
      * @return a port number
      */
-    public long pickAndRegisterPortNumber(Protos.TaskID taskId, Protos.Offer offer) {
-        for (Protos.Resource resource : offer.getResourcesList()) {
+    public long pickAndRegisterPortNumber(TaskID taskId, Offer offer) {
+        for (Resource resource : offer.getResourcesList()) {
             if (!resource.getName().equals("ports")) continue;
 
-            List<Protos.Value.Range> offeredRanges = resource.getRanges().getRangeList();
-            for (Protos.Value.Range portRange : offeredRanges) {
+            List<Value.Range> offeredRanges = resource.getRanges().getRangeList();
+            for (Value.Range portRange : offeredRanges) {
                 long begin = portRange.getBegin();
                 long end = portRange.getEnd();
                 for (long port = begin; port < end; port++) {
@@ -276,11 +278,11 @@ public class SchedulerConfiguration {
      * @param elasticSearchUrl the elasticSearchUrl under which to add the given task
      * @param taskId           the task to add
      */
-    public void registerTask(String elasticSearchUrl, Protos.TaskID taskId) {
+    public void registerTask(String elasticSearchUrl, TaskID taskId) {
         if (runningTasks.containsKey(elasticSearchUrl)) {
             runningTasks.get(elasticSearchUrl).add(taskId);
         } else {
-            ArrayList<Protos.TaskID> instances = new ArrayList<>();
+            ArrayList<TaskID> instances = new ArrayList<>();
             instances.add(taskId);
             runningTasks.put(elasticSearchUrl, instances);
         }
@@ -292,8 +294,8 @@ public class SchedulerConfiguration {
      *
      * @param taskId the task to unregister
      */
-    public void unregisterTask(Protos.TaskID taskId) {
-        for (Map.Entry<String, List<Protos.TaskID>> taskEntry : runningTasks.entrySet()) {
+    public void unregisterTask(TaskID taskId) {
+        for (Map.Entry<String, List<TaskID>> taskEntry : runningTasks.entrySet()) {
             if (taskEntry.getValue().contains(taskId)) {
                 taskEntry.getValue().remove(taskId);
                 if (taskEntry.getValue().isEmpty())
@@ -331,7 +333,7 @@ public class SchedulerConfiguration {
         setRequiredDisk(Double.parseDouble(disk));
 
         String port = commandLine.getOptionValue("p", "9001");
-        setApiPort(port);
+        setApiPort(Integer.parseInt(port));
 
         String esUrls = commandLine.getOptionValue("es");
         if (esUrls != null) {
@@ -347,9 +349,9 @@ public class SchedulerConfiguration {
      * @param elasticSearchUrl the the elasticSearchUrl of which to return the youngest task
      * @return the youngest task of the given elasticSearchUrl
      */
-    public Protos.TaskID getYoungestTask(String elasticSearchUrl) {
+    public TaskID getYoungestTask(String elasticSearchUrl) {
         if (runningTasks.containsKey(elasticSearchUrl)) {
-            List<Protos.TaskID> tasks = runningTasks.get(elasticSearchUrl);
+            List<TaskID> tasks = runningTasks.get(elasticSearchUrl);
             return tasks.get(tasks.size() - 1);
         }
         return null;

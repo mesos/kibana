@@ -1,9 +1,11 @@
 package org.apache.mesos.kibana;
 
-import org.apache.mesos.Protos;
+import org.apache.mesos.Protos.Offer;
+import org.apache.mesos.Protos.OfferID;
+import org.apache.mesos.Protos.FrameworkID;
+import org.apache.mesos.Protos.SlaveID;
 import org.apache.mesos.kibana.scheduler.Resources;
 import org.apache.mesos.kibana.scheduler.SchedulerConfiguration;
-
 import java.util.ArrayList;
 import java.util.List;
 
@@ -18,14 +20,14 @@ public class TestUtils {
      * @param amount amount of offers to create
      * @return given amount of offers with adequate resources
      */
-    public static List<Protos.Offer> getValidOffers(int amount) {
-        List<Protos.Offer> offers = new ArrayList<>();
+    public static List<Offer> getValidOffers(int amount) {
+        List<Offer> offers = new ArrayList<>();
         SchedulerConfiguration config = new SchedulerConfiguration();
         for (int i = 0; i < amount; i++) {
-            Protos.Offer offer = Protos.Offer.newBuilder()
-                    .setId(Protos.OfferID.newBuilder().setValue("valid-offer-" + i).build())
-                    .setSlaveId(Protos.SlaveID.newBuilder().setValue("slave-" + i).build())
-                    .setFrameworkId(Protos.FrameworkID.newBuilder().setValue("kibana").build())
+            Offer offer = Offer.newBuilder()
+                    .setId(OfferID.newBuilder().setValue("valid-offer-" + i).build())
+                    .setSlaveId(SlaveID.newBuilder().setValue("slave-" + i).build())
+                    .setFrameworkId(FrameworkID.newBuilder().setValue("kibana").build())
                     .setHostname("localhost")
                     .addResources(Resources.buildCpuResource(config.getRequiredCpu()))
                     .addResources(Resources.buildMemResource(config.getRequiredMem()))
@@ -43,14 +45,14 @@ public class TestUtils {
      * @param amount amount of offers to create
      * @return given amount of offers with inadequate resources
      */
-    public static List<Protos.Offer> getInvalidOffers(int amount) {
-        List<Protos.Offer> offers = new ArrayList<>();
+    public static List<Offer> getInvalidOffers(int amount) {
+        List<Offer> offers = new ArrayList<>();
         SchedulerConfiguration config = new SchedulerConfiguration();
         for (int i = 0; i < amount; i++) {
-            Protos.Offer offer = Protos.Offer.newBuilder()
-                    .setId(Protos.OfferID.newBuilder().setValue("invalid-offer-" + i).build())
-                    .setSlaveId(Protos.SlaveID.newBuilder().setValue("slave-" + i).build())
-                    .setFrameworkId(Protos.FrameworkID.newBuilder().setValue("kibana").build())
+            Offer offer = Offer.newBuilder()
+                    .setId(OfferID.newBuilder().setValue("invalid-offer-" + i).build())
+                    .setSlaveId(SlaveID.newBuilder().setValue("slave-" + i).build())
+                    .setFrameworkId(FrameworkID.newBuilder().setValue("kibana").build())
                     .setHostname("localhost")
                     .addResources(Resources.buildCpuResource(config.getRequiredCpu() / 2))
                     .addResources(Resources.buildMemResource(config.getRequiredMem() / 2))

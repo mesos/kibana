@@ -1,6 +1,6 @@
 package org.apache.mesos.kibana.scheduler;
 
-import org.apache.mesos.Protos;
+import org.apache.mesos.Protos.Offer;
 import org.apache.mesos.SchedulerDriver;
 import org.apache.mesos.kibana.TestUtils;
 import org.junit.Test;
@@ -18,7 +18,7 @@ public class KibanaSchedulerTest {
      */
     @Test
     public void testOfferIsAcceptable_acceptsGoodOffers() {
-        Protos.Offer goodOffer = TestUtils.getValidOffers(1).get(0);
+        Offer goodOffer = TestUtils.getValidOffers(1).get(0);
         KibanaScheduler scheduler = new KibanaScheduler(mock(SchedulerConfiguration.class));
 
         boolean isAcceptable = scheduler.offerIsAcceptable(goodOffer);
@@ -31,7 +31,7 @@ public class KibanaSchedulerTest {
      */
     @Test
     public void testOfferIsAcceptable_rejectsBadOffers() {
-        Protos.Offer badOffer = TestUtils.getInvalidOffers(1).get(0);
+        Offer badOffer = TestUtils.getInvalidOffers(1).get(0);
         KibanaScheduler scheduler = new KibanaScheduler(mock(SchedulerConfiguration.class));
 
         boolean isAcceptable = scheduler.offerIsAcceptable(badOffer);
