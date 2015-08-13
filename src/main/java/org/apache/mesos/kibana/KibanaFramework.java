@@ -32,7 +32,9 @@ public class KibanaFramework {
      * @param args application launch arguments
      */
     public static void main(String[] args) {
+        LOGGER.info("Entering KibanaFramework main().");
 
+        LOGGER.info("Setting up the scheduler configuration.");
         final SchedulerConfiguration configuration = new SchedulerConfiguration();
         try {
             configuration.parseLaunchArguments(args); //DCOS-10 Configuration MUST be via CLI parameters or environment variables.
@@ -42,12 +44,14 @@ public class KibanaFramework {
             System.exit(1);
         }
 
+        LOGGER.info("Setting up the Framework.");
         FrameworkInfo.Builder framework = FrameworkInfo.newBuilder()
                 .setName(configuration.getFrameworkName())
                 .setUser("")
                 .setCheckpoint(true) //DCOS-04 Scheduler MUST enable checkpointing.
                 .setFailoverTimeout(ONE_DAY_IN_SECONDS); //DCOS-01 Scheduler MUST register with a failover timeout.
 
+        LOGGER.info("Setting up the State.");
         State state = new State(configuration.getZookeeper());
         configuration.setState(state);
         FrameworkID frameworkId = state.getFrameworkId();
@@ -55,9 +59,11 @@ public class KibanaFramework {
             framework.setId(frameworkId); //DCOS-02 Scheduler MUST persist their FrameworkID for failover.
         }
 
+        LOGGER.info("Setting up the Scheduler");
         final Scheduler scheduler = new KibanaScheduler(configuration);
         final MesosSchedulerDriver schedulerDriver = new MesosSchedulerDriver(scheduler, framework.build(), configuration.getZookeeper());
 
+        LOGGER.info("Setting up the Spring Web API");
         HashMap<String, Object> properties = new HashMap<>();
         properties.put("server.port", configuration.getApiPort());
         new SpringApplicationBuilder(KibanaFrameworkService.class)

@@ -7,6 +7,7 @@ import org.apache.mesos.Protos.Offer;
 import org.apache.mesos.Protos.Resource;
 import org.apache.mesos.Protos.TaskID;
 import org.apache.mesos.Protos.Value;
+
 import java.util.*;
 
 /**
@@ -33,9 +34,9 @@ public class SchedulerConfiguration {
     private Map<TaskID, Long> usedPortNumbers = new HashMap<>();         // a list containing the currently used ports, part of the Docker host ports workaround
     private String zookeeper;   // the zookeeper url
     private State state;        // the state of the zookeeper
-    private int apiPort      = 9001;     // the port of the JSON API
-    private double requiredCpu  = 0.1D; // the amount of CPUs a task needs
-    private double requiredMem  = 128D; // the amount of memory a task needs
+    private int apiPort = 9001;     // the port of the JSON API
+    private double requiredCpu = 0.1D; // the amount of CPUs a task needs
+    private double requiredMem = 128D; // the amount of memory a task needs
     private double requiredDisk = 25D; // the amount of disk space a task needs
 
     /**
@@ -76,6 +77,7 @@ public class SchedulerConfiguration {
 
     /**
      * Returns the required disk space in MB a task needs
+     *
      * @return the required disk space in MB a task needs
      */
     public double getRequiredDisk() {
@@ -84,9 +86,11 @@ public class SchedulerConfiguration {
 
     /**
      * Sets the required disk space in MB a task needs
+     *
      * @param requiredDisk the required disk space in MB a task needs
      */
     public void setRequiredDisk(double requiredDisk) {
+        LOGGER.info("Setting required disk space to {} MB.", requiredDisk);
         this.requiredDisk = requiredDisk;
     }
 
@@ -161,6 +165,7 @@ public class SchedulerConfiguration {
      * @param requiredCpu the amount of CPUs a task
      */
     public void setRequiredCpu(double requiredCpu) {
+        LOGGER.info("Setting required CPUs to {}.", requiredCpu);
         this.requiredCpu = requiredCpu;
     }
 
@@ -179,6 +184,7 @@ public class SchedulerConfiguration {
      * @param requiredMem the amount of memory a task needs
      */
     public void setRequiredMem(double requiredMem) {
+        LOGGER.info("Setting required memory to {} MB.", requiredMem);
         this.requiredMem = requiredMem;
     }
 
@@ -200,6 +206,7 @@ public class SchedulerConfiguration {
                 for (long port = begin; port < end; port++) {
                     if (!usedPortNumbers.values().contains(port)) {
                         usedPortNumbers.put(taskId, port);
+                        LOGGER.info("Task {} received port {}.", taskId, port);
                         return port;
                     }
                 }
@@ -221,14 +228,14 @@ public class SchedulerConfiguration {
             int newAmount = amount + requiredTasks.get(elasticSearchUrl).intValue();
             if (newAmount <= 0) {
                 requiredTasks.remove(elasticSearchUrl);
-                LOGGER.info("RequiredInstances: No more instances are required for ElasticSearch {}", elasticSearchUrl);
+                LOGGER.info("No more instances are required for ElasticSearch {}", elasticSearchUrl);
             } else {
                 requiredTasks.put(elasticSearchUrl, newAmount);
-                LOGGER.info("RequiredInstances: Now requiring {} instances for ElasticSearch {}", newAmount, elasticSearchUrl);
+                LOGGER.info("Now requiring {} instances for ElasticSearch {}", newAmount, elasticSearchUrl);
             }
         } else if (amount > 0) {
             requiredTasks.put(elasticSearchUrl, amount);
-            LOGGER.info("RequiredInstances: Now requiring {} instances for ElasticSearch {}", amount, elasticSearchUrl);
+            LOGGER.info("Now requiring {} instances for ElasticSearch {}", amount, elasticSearchUrl);
         }
     }
 
@@ -313,6 +320,7 @@ public class SchedulerConfiguration {
      * @param args the passed in arguments
      */
     public void parseLaunchArguments(String[] args) throws ParseException {
+        LOGGER.info("Parsing arguments ({}).", args.toString());
         CommandLineParser parser = new DefaultParser();
         CommandLine commandLine = parser.parse(OPTIONS, args);
 
