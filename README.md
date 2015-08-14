@@ -62,40 +62,40 @@ During development the latest pre-release can be downloaded from our [mesos-kiba
 
 From version 0.1.0.
 
-## Deploy using gradle
-Currently deploying is supported for docker based mesos clusters. The task takes it's settings from the `deploy.properties` file, the default values matches a docker cluster created using `docker-compose` in the [kibana-mesos-demo](https://github.com/Praqma/mesos-kibana-demo) repository.
+## Deploying with gradle
 
-By default the latest release is only stored on our CI server on the [mesos-kibana_release](http://code.praqma.net/ci/view/All/job/mesos-kibana_release) job selected (until a artifact management and repository system is available).
+We currently support Gradle deployment for Docker based Mesos clusters.
+The Gradle task uses the settings defined in the `deploy.properties` file.
+The default values match a Docker cluster created using `docker-compose` in the [kibana-mesos-demo](https://github.com/Praqma/mesos-kibana-demo) repository.
 
-If the _deploy_ task is executed as
+To deploy, simply run:
 ```
-gradle deploy -PverifyBuild
+gradle deploy [-PverifyBuild]
 ```
-the latest build from the verification job will be used.
+The `-PverifyBuild` options makes Gradle use the latest build from the [mesos-kibana_verify](http://code.praqma.net/ci/job/mesos-kibana_verify/) job.
 
-## Deploy manually
-Copy the kibana jar file onto your Mesos master and run it.
+Note: Until an artifact management and repository system is in place, the latest release is only stored in the [mesos-kibana_release](http://code.praqma.net/ci/view/All/job/mesos-kibana_release) job on our CI server.
+
+## Deploying manually
+For manual deployment, simply copy the kibana jar file onto your Mesos master and run it.
 ```
 java -jar /path-to/kibana.jar
 ```
 
 ### Launch options
 ```
--zk     -zookeeper       Mesos Zookeeper URL.
--p      -port            The TCP port for the webservice. Defaults to 9001.
--mem	-requiredMem	 The amount of memory (in MB) to allocate to a single Kibana instance.
--cpu	-requiredCpu	 The amount of CPUs to allocate to a single Kibana instance.
--cpu	-requiredCpu	 The amount of disk space (in MB) to allocate to a single Kibana instance.
+-zk     -zookeeper       Mesos Zookeeper URL. (Required)
+-p      -port            The TCP port for the webservice. (Default: 9001)
+-mem	-requiredMem	 The amount of memory (in MB) to allocate to a single Kibana instance. (Default: 128)
+-cpu	-requiredCpu	 The amount of CPUs to allocate to a single Kibana instance. (Default: 0.1)
+-disk	-requiredDisk	 The amount of disk space (in MB) to allocate to a single Kibana instance. (Default: 25)
 -es     -elasticsearch   URLs of ElasticSearch to start a Kibana for at startup.
 ```
-Note: Either `-m` or `-zk` must be provided at startup.
-
 ### Example
-With  kibana-0.1.1.jar in the tmp directory on the mesos-master, zookeeper running with hostname zookeeper and one elasticsearch instance running with ip: 172.17.0.68 the corresponding command would look like
+With the `kibana.jar` in the `tmp` directory on the Mesos master, zookeeper with hostname `zookeeper` and one ElasticSearch instance running with IP `172.17.0.68` and the default port, the launch command would be:
 ```
-java -jar /tmp/kibana-0.1.1.jar -zk zk://zookeeper:2181/mesos -es http://172.17.0.68:9200
+java -jar /tmp/kibana.jar -zk zk://zookeeper:2181/mesos -es http://172.17.0.68:9200
 ```
-
 
 # Management - interact with framework
 Tasks can be managed through the _simple JSON service_ we have created.
