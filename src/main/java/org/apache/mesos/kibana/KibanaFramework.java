@@ -6,6 +6,7 @@ import org.apache.mesos.MesosSchedulerDriver;
 import org.apache.mesos.Protos.Status;
 import org.apache.mesos.Protos.FrameworkID;
 import org.apache.mesos.Protos.FrameworkInfo;
+import org.apache.mesos.Protos.Credential;
 import org.apache.mesos.Scheduler;
 import org.apache.mesos.kibana.scheduler.KibanaScheduler;
 import org.apache.mesos.kibana.scheduler.SchedulerConfiguration;
@@ -18,6 +19,7 @@ import org.springframework.boot.builder.SpringApplicationBuilder;
 import org.springframework.context.ApplicationContextInitializer;
 import org.springframework.context.ConfigurableApplicationContext;
 import org.springframework.core.env.Environment;
+import com.google.protobuf.ByteString;
 
 import java.io.PrintStream;
 import java.util.HashMap;
@@ -59,9 +61,26 @@ public class KibanaFramework {
             framework.setId(frameworkId); //DCOS-02 Scheduler MUST persist their FrameworkID for failover.
         }
 
-        LOGGER.info("Setting up the Scheduler");
-        final Scheduler scheduler = new KibanaScheduler(configuration);
-        final MesosSchedulerDriver schedulerDriver = new MesosSchedulerDriver(scheduler, framework.build(), configuration.getZookeeper());
+        final Scheduler scheduler;
+        final MesosSchedulerDriver schedulerDriver;
+
+        if (configuration.getPrincipal() != null) {
+            LOGGER.info("Setting up mesos authentication.");
+            Credential.Builder credentialBuilder = Credential.newBuilder();
+            framework.setPrincipal(configuration.getPrincipal());
+            credentialBuilder.setPrincipal(configuration.getPrincipal());
+            credentialBuilder.setSecret(ByteString.copyFromUtf8(configuration.getSecret()));
+
+            LOGGER.info("Setting up the Scheduler");
+            scheduler = new KibanaScheduler(configuration);
+            schedulerDriver = new MesosSchedulerDriver(scheduler, framework.build(), configuration.getZookeeper(),credentialBuilder.build());
+        }
+        else {
+            LOGGER.info("Setting up the Scheduler");
+            scheduler = new KibanaScheduler(configuration);
+            schedulerDriver = new MesosSchedulerDriver(scheduler, framework.build(), configuration.getZookeeper());
+        }
+
 
         LOGGER.info("Setting up the Spring Web API");
         HashMap<String, Object> properties = new HashMap<>();

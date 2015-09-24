@@ -27,6 +27,8 @@ public class SchedulerConfiguration {
         addOption("mem", "requiredMem", true, "Amount of memory (MB) given to a Kibana instance (128)");
         addOption("disk", "requiredDisk", true, "Amount of disk space (MB) given to a Kibana instance (20)");
         addOption("p", "port", true, "TCP port for the webservice (9001)");
+        addOption("principal","principal",true,"mesos principal for authentication");
+        addOption("secret","secret",true,"mesos princial for authentication");
     }};
 
     protected Map<String, Integer> requiredTasks = new HashMap<>();             // a map containing the required tasks: <elasticSearchUrl, numberOfInstances>
@@ -38,6 +40,8 @@ public class SchedulerConfiguration {
     private double requiredCpu = 0.1D; // the amount of CPUs a task needs
     private double requiredMem = 128D; // the amount of memory a task needs
     private double requiredDisk = 25D; // the amount of disk space a task needs
+    private String principal; // mesos principal
+    private String secret; // mesos secret
 
     /**
      * Returns the name of the framework
@@ -111,6 +115,44 @@ public class SchedulerConfiguration {
     public void setApiPort(int apiPort) {
         LOGGER.info("Setting api port to {}", apiPort);
         this.apiPort = apiPort;
+    }
+
+    /**
+     * Returns the principal for mesos authentication
+     *
+     * @return the principal
+     */
+    public String getPrincipal() {
+        return principal;
+    }
+
+    /**
+     * Sets the principal for mesos authentication
+     *
+     * @param principal the principal to use
+     */
+    public void setPrincipal(String principal) {
+        LOGGER.info("Setting mesos principal");
+        this.principal = principal;
+    }
+
+    /**
+     * Returns the secret for mesos authentication
+     *
+     * @return the secret
+     */
+    public String getSecret() {
+        return secret;
+    }
+
+    /**
+     * Sets the Secret for mesos authentication
+     *
+     * @param secret the secret to use
+     */
+    public void setSecret(String secret) {
+        LOGGER.info("Setting mesos secret");
+        this.secret = secret;
     }
 
     /**
@@ -329,6 +371,17 @@ public class SchedulerConfiguration {
             setZookeeper(zk);
         } else {
             throw new MissingArgumentException("Zookeeper url is required.");
+        }
+
+        String principal = commandLine.getOptionValue("principal");
+        if (principal != null) {
+            setPrincipal(principal);
+            String secret = commandLine.getOptionValue("secret");
+            if (secret != null) {
+                setSecret(secret);
+            } else {
+                throw new MissingArgumentException("mesos secret is needed when principal is specified");
+            }
         }
 
         String cpu = commandLine.getOptionValue("cpu", "0.1");
