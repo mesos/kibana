@@ -15,14 +15,18 @@ import java.util.*;
  * Used to manage task settings and required/running tasks.
  */
 public class SchedulerConfiguration {
+
     private static final Logger LOGGER = LoggerFactory.getLogger(SchedulerConfiguration.class);
-    private static final String FRAMEWORK_NAME = "kibana";      // the name of this Mesos framework
-    private static final String DOCKER_IMAGE_NAME = "kibana";   // the name of Kibana Docker image to use when starting a task
-    private static final double REQUIRED_PORT_COUNT = 1D;       // the amount of ports a task needs
+
+    private static final String FRAMEWORK_NAME = "kibana";         // the name of this Mesos framework
+    private static final String DEFAULT_KIBANA_VERSION = "latest"; // version of Kibana (and its image) to use
+    private static final String DOCKER_IMAGE_NAME = "kibana";      // the name of Kibana Docker image to use when starting a task
+    private static final double REQUIRED_PORT_COUNT = 1D;          // the amount of ports a task needs
 
     private static final Options OPTIONS = new Options() {{     // launch options for the KibanaFramework
         addOption("zk", "zookeeper", true, "Zookeeper URL (zk://host:port/mesos)");
         addOption("es", "elasticsearch", true, "ElasticSearch URLs (http://host:port;http://host:port)");
+        addOption("v", "version", true, "Version of Kibana docker image to use");
         addOption("cpu", "requiredCpu", true, "Amount of CPUs given to a Kibana instance (0.1)");
         addOption("mem", "requiredMem", true, "Amount of memory (MB) given to a Kibana instance (128)");
         addOption("disk", "requiredDisk", true, "Amount of disk space (MB) given to a Kibana instance (20)");
@@ -38,6 +42,7 @@ public class SchedulerConfiguration {
     private double requiredCpu = 0.1D; // the amount of CPUs a task needs
     private double requiredMem = 128D; // the amount of memory a task needs
     private double requiredDisk = 25D; // the amount of disk space a task needs
+    private String kibanaVersion = DEFAULT_KIBANA_VERSION;
 
     /**
      * Returns the name of the framework
@@ -53,8 +58,8 @@ public class SchedulerConfiguration {
      *
      * @return the name of the Kibana Docker image
      */
-    public static String getDockerImageName() {
-        return DOCKER_IMAGE_NAME;
+    public String getDockerImageName() {
+        return String.format("%s:%s", DOCKER_IMAGE_NAME, kibanaVersion);
     }
 
     /**
@@ -225,7 +230,7 @@ public class SchedulerConfiguration {
      */
     public void registerRequirement(String elasticSearchUrl, int amount) {
         if (requiredTasks.containsKey(elasticSearchUrl)) {
-            int newAmount = amount + requiredTasks.get(elasticSearchUrl).intValue();
+            int newAmount = amount + requiredTasks.get(elasticSearchUrl);
             if (newAmount <= 0) {
                 requiredTasks.remove(elasticSearchUrl);
                 LOGGER.info("No more instances are required for ElasticSearch {}", elasticSearchUrl);
@@ -320,7 +325,7 @@ public class SchedulerConfiguration {
      * @param args the passed in arguments
      */
     public void parseLaunchArguments(String[] args) throws ParseException {
-        LOGGER.info("Parsing arguments ({}).", args.toString());
+        LOGGER.info("Parsing arguments ({}).", Arrays.toString(args));
         CommandLineParser parser = new DefaultParser();
         CommandLine commandLine = parser.parse(OPTIONS, args);
 
@@ -349,6 +354,12 @@ public class SchedulerConfiguration {
                 registerRequirement(esUrl, 1);
             }
         }
+
+        String version = commandLine.getOptionValue("v");
+        if (version != null) {
+            setKibanaVersion(version);
+        }
+
     }
 
     /**
@@ -364,4 +375,9 @@ public class SchedulerConfiguration {
         }
         return null;
     }
+
+    public void setKibanaVersion(String kibanaVersion) {
+        this.kibanaVersion = kibanaVersion;
+    }
+
 }

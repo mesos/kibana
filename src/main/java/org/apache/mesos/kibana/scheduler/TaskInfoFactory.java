@@ -10,6 +10,7 @@ import org.apache.mesos.Protos.TaskInfo;
 import org.apache.mesos.Protos.ContainerInfo.DockerInfo;
 
 import java.util.Arrays;
+import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.atomic.AtomicInteger;
@@ -31,7 +32,7 @@ public class TaskInfoFactory {
     public static TaskInfo buildTask(Map.Entry<String, Integer> requirement, Offer offer, SchedulerConfiguration configuration) {
         TaskID taskId = generateTaskId();
         long port = configuration.pickAndRegisterPortNumber(taskId, offer);
-        ContainerInfo container = buildContainerInfo(port);
+        ContainerInfo container = buildContainerInfo(configuration, port);
         Environment environment = buildEnvironment(requirement.getKey());
         CommandInfo command = buildCommandInfo(environment);
         List<Resource> resources = buildResources(configuration, port); //DCOS-06 Scheduler MUST only use the necessary fraction of an offer.
@@ -71,7 +72,7 @@ public class TaskInfoFactory {
         esUrlVariableBuilder.setName("ELASTICSEARCH_URL");
         esUrlVariableBuilder.setValue(elasticSearchUrl);
 
-        List<Environment.Variable> variables = Arrays.asList(esUrlVariableBuilder.build());
+        List<Environment.Variable> variables = Collections.singletonList(esUrlVariableBuilder.build());
 
         Environment.Builder environmentBuilder = Environment.newBuilder();
         environmentBuilder.addAllVariables(variables);
@@ -84,14 +85,14 @@ public class TaskInfoFactory {
      * @param port the host port to direct to Kibana
      * @return the Docker ContainerInfo
      */
-    private static ContainerInfo buildContainerInfo(long port) {
+    private static ContainerInfo buildContainerInfo(SchedulerConfiguration configuration, long port) {
         DockerInfo.PortMapping.Builder portMappingBuilder = DockerInfo.PortMapping.newBuilder();
         portMappingBuilder.setHostPort((int) port);
         portMappingBuilder.setContainerPort(5601);
         portMappingBuilder.setProtocol("tcp");
 
         DockerInfo.Builder dockerInfo = DockerInfo.newBuilder();
-        dockerInfo.setImage(SchedulerConfiguration.getDockerImageName());
+        dockerInfo.setImage(configuration.getDockerImageName());
         dockerInfo.addPortMappings(portMappingBuilder.build());
         dockerInfo.setNetwork(ContainerInfo.DockerInfo.Network.BRIDGE);
         dockerInfo.build();
@@ -106,7 +107,7 @@ public class TaskInfoFactory {
      * Prepares the tasks' resources
      *
      *
-     * @param configuration
+     * @param configuration scheduler configuration
      * @param port the hosts' port that will be mapped to Kibana
      * @return a list of the tasks' resources
      */
