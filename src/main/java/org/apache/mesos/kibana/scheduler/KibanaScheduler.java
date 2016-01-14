@@ -127,9 +127,12 @@ public class KibanaScheduler implements Scheduler {
 
         //Spin up/kill off tasks as necessary
         for (Map.Entry<String, Integer> requirement : configuration.getRequirementDeltaMap().entrySet()) {
+
             int delta = requirement.getValue();
+            String esLink = requirement.getKey();
+
             if (delta > 0) {
-                LOGGER.info("ElasticSearch {} is missing {} tasks. Attempting to spin up required tasks.", requirement.getKey(), delta);
+                LOGGER.info("ElasticSearch {} is missing {} tasks. Attempting to spin up required tasks.", esLink, delta);
                 while (delta > 0) {
                     if (acceptableOffers.isEmpty()) break;
                     Offer pickedOffer = acceptableOffers.get(0);
@@ -138,9 +141,9 @@ public class KibanaScheduler implements Scheduler {
                     delta--;
                 }
             } else if (delta < 0) {
-                LOGGER.info("ElasticSearch {} has an excess of {} tasks. Attempting to kill off excess tasks.", requirement.getKey(), delta);
+                LOGGER.info("ElasticSearch {} has an excess of {} tasks. Attempting to kill off excess tasks.", esLink, delta);
                 while (delta < 0) {
-                    TaskID excessTask = configuration.getYoungestTask(requirement.getKey());
+                    TaskID excessTask = configuration.getYoungestTask(esLink);
                     if (excessTask == null) break;
                     else {
                         configuration.unregisterTask(excessTask);
