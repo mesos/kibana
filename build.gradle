@@ -1,12 +1,22 @@
+buildscript {
+    repositories {
+        mavenCentral()
+    }
+    dependencies {
+        classpath("org.springframework.boot:spring-boot-gradle-plugin:1.2.5.RELEASE")
+    }
+}
+
+plugins {
+    id "org.sonarqube" version "1.2"
+}
+
 apply plugin: 'java'
 apply plugin: 'maven'
 apply plugin: 'spring-boot'
 
 apply from: 'source.gradle'
-
 apply from: 'ci.properties'
-
-
 
 task setVersion {
   description  'Defines the version from the state in git'
@@ -20,6 +30,7 @@ task setVersion {
 }
 
 group = 'org.apache.mesos.kibana'
+
 
 /*
  * When you build a new release
@@ -235,15 +246,6 @@ task check4kibana {
       }
 
   }
-}
-
-buildscript {
-    repositories {
-        mavenCentral()
-    }
-    dependencies {
-        classpath("org.springframework.boot:spring-boot-gradle-plugin:1.2.5.RELEASE")
-    }
 }
 
 repositories {

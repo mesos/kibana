@@ -9,6 +9,8 @@ import java.util.List;
  */
 public class Resources {
 
+    private Resources() {}
+
     /**
      * Creates a cpu Resource with given amount of cpus
      *

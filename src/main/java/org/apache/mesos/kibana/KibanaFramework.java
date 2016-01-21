@@ -17,14 +17,15 @@ import org.springframework.boot.Banner;
 import org.springframework.boot.builder.SpringApplicationBuilder;
 import org.springframework.context.ApplicationContextInitializer;
 import org.springframework.context.ConfigurableApplicationContext;
-import org.springframework.core.env.Environment;
 
-import java.io.PrintStream;
 import java.util.HashMap;
 
 public class KibanaFramework {
+
     private static final Logger LOGGER = LoggerFactory.getLogger(KibanaFramework.class);
-    private static double ONE_DAY_IN_SECONDS = 86400D;
+    private static final double ONE_DAY_IN_SECONDS = 86400D;
+
+    private KibanaFramework() {}
 
     /**
      * KibanaFramework entry point
@@ -40,13 +41,13 @@ public class KibanaFramework {
             configuration.parseLaunchArguments(args); //DCOS-10 Configuration MUST be via CLI parameters or environment variables.
         } catch (ParseException e) {
             HelpFormatter formatter = new HelpFormatter();
-            formatter.printHelp(configuration.getFrameworkName(), configuration.getOptions());
+            formatter.printHelp(SchedulerConfiguration.getFrameworkName(), SchedulerConfiguration.getOptions());
             System.exit(1);
         }
 
         LOGGER.info("Setting up the Framework.");
         FrameworkInfo.Builder framework = FrameworkInfo.newBuilder()
-                .setName(configuration.getFrameworkName())
+                .setName(SchedulerConfiguration.getFrameworkName())
                 .setUser("")
                 .setCheckpoint(true) //DCOS-04 Scheduler MUST enable checkpointing.
                 .setFailoverTimeout(ONE_DAY_IN_SECONDS); //DCOS-01 Scheduler MUST register with a failover timeout.
@@ -88,15 +89,10 @@ public class KibanaFramework {
      * @return our cool custom banner
      */
     private static Banner getBanner() {
-        return new Banner() {
-            @Override
-            public void printBanner(Environment environment, Class<?> sourceClass, PrintStream out) {
-                out.print(  "  _  __ _  _                          \n" +
-                            " | |/ /(_)| |__    __ _  _ __    __ _ \n" +
-                            " | ' / | || '_ \\  / _` || '_ \\  / _` |\n" +
-                            " | . \\ | || |_) || (_| || | | || (_| |\n" +
-                            " |_|\\_\\|_||_.__/  \\__,_||_| |_| \\__,_|\n");
-            }
-        };
+        return (environment, sourceClass, out) -> out.print(  "  _  __ _  _                          \n" +
+                    " | |/ /(_)| |__    __ _  _ __    __ _ \n" +
+                    " | ' / | || '_ \\  / _` || '_ \\  / _` |\n" +
+                    " | . \\ | || |_) || (_| || | | || (_| |\n" +
+                    " |_|\\_\\|_||_.__/  \\__,_||_| |_| \\__,_|\n");
     }
 }
