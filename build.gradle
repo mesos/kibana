@@ -272,3 +272,7 @@ jar {
 task wrapper(type: Wrapper) {
     gradleVersion = '2.3'
 }
+
+install {
+  dependsOn 'build' // Required so that bootRepackage gets called during the install command.
+}
