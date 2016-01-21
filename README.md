@@ -93,9 +93,10 @@ java -jar /path-to/kibana.jar
 -es     -elasticsearch   URLs of ElasticSearch to start a Kibana for at startup.
 ```
 ### Example
-With the `kibana.jar` in the `tmp` directory on the Mesos master, zookeeper with hostname `zookeeper` and one ElasticSearch instance running with IP `172.17.0.68` and the default port, the launch command would be:
+With the `kibana.jar` in the `tmp` directory on the Mesos master, zookeeper with hostname `zookeeper` and one ElasticSearch instance running with IP `172.17.0.68` and the default port, the launch command
+ for Kibana 4.3.1 would be:
 ```
-java -jar /tmp/kibana.jar -zk zk://zookeeper:2181/mesos -es http://172.17.0.68:9200
+java -jar /tmp/kibana.jar -zk zk://zookeeper:2181/mesos -v 4.3.1 -es http://172.17.0.68:9200
 ```
 
 # Management - interact with framework
