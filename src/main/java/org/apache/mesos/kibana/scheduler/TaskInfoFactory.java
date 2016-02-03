@@ -10,7 +10,6 @@ import org.apache.mesos.Protos.TaskInfo;
 import org.apache.mesos.Protos.ContainerInfo.DockerInfo;
 
 import java.util.Arrays;
-import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.atomic.AtomicInteger;
@@ -32,8 +31,10 @@ public class TaskInfoFactory {
     public static TaskInfo buildTask(Map.Entry<String, Integer> requirement, Offer offer, SchedulerConfiguration configuration) {
         TaskID taskId = generateTaskId();
         long port = configuration.pickAndRegisterPortNumber(taskId, offer);
+        double memReq = configuration.getRequiredMem();
         ContainerInfo container = buildContainerInfo(configuration, port);
-        Environment environment = buildEnvironment(requirement.getKey());
+        // based on https://github.com/elastic/kibana/issues/5170#issuecomment-163042525
+        Environment environment = buildEnvironment(requirement.getKey(), (int) (memReq - 100));
         CommandInfo command = buildCommandInfo(environment);
         List<Resource> resources = buildResources(configuration, port); //DCOS-06 Scheduler MUST only use the necessary fraction of an offer.
         return buildTaskInfo(taskId, offer, container, command, resources);
@@ -67,12 +68,18 @@ public class TaskInfoFactory {
      * @param elasticSearchUrl the elasticSearchUrl to set
      * @return the Environment
      */
-    private static Environment buildEnvironment(String elasticSearchUrl) {
+    private static Environment buildEnvironment(String elasticSearchUrl, int nodeOptionsSpace ) {
+
         Environment.Variable.Builder esUrlVariableBuilder = Environment.Variable.newBuilder();
         esUrlVariableBuilder.setName("ELASTICSEARCH_URL");
         esUrlVariableBuilder.setValue(elasticSearchUrl);
 
-        List<Environment.Variable> variables = Collections.singletonList(esUrlVariableBuilder.build());
+        // based on https://github.com/elastic/kibana/issues/5170#issuecomment-163042525
+        Environment.Variable.Builder nodeOptionsBuilder = Environment.Variable.newBuilder();
+        nodeOptionsBuilder.setName("NODE_OPTIONS");
+        nodeOptionsBuilder.setValue("--max-old-space-size=" + nodeOptionsSpace);
+
+        List<Environment.Variable> variables = Arrays.asList( esUrlVariableBuilder.build(), nodeOptionsBuilder.build() );
 
         Environment.Builder environmentBuilder = Environment.newBuilder();
         environmentBuilder.addAllVariables(variables);
@@ -100,6 +107,7 @@ public class TaskInfoFactory {
         ContainerInfo.Builder containerInfo = ContainerInfo.newBuilder();
         containerInfo.setType(ContainerInfo.Type.DOCKER);
         containerInfo.setDocker(dockerInfo);
+
         return containerInfo.build();
     }
 

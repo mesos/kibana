@@ -86,6 +86,7 @@ java -jar /path-to/kibana.jar
 ```
 -zk     -zookeeper       Mesos Zookeeper URL. (Required)
 -p      -port            The TCP port for the webservice. (Default: 9001)
+-di     -dockerimage     Name of docker image to use. (Default: kibana)
 -v      -version         Version of Kibana docker image to use. (Default: latest) 
 -mem	-requiredMem	 The amount of memory (in MB) to allocate to a single Kibana instance. (Default: 128)
 -cpu	-requiredCpu	 The amount of CPUs to allocate to a single Kibana instance. (Default: 0.1)

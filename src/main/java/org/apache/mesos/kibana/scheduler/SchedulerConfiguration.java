@@ -20,12 +20,13 @@ public class SchedulerConfiguration {
 
     private static final String FRAMEWORK_NAME = "kibana";         // the name of this Mesos framework
     private static final String DEFAULT_KIBANA_VERSION = "latest"; // version of Kibana (and its image) to use
-    private static final String DOCKER_IMAGE_NAME = "kibana";      // the name of Kibana Docker image to use when starting a task
+    private static final String DEFAULT_DOCKER_IMAGE = "kibana";      // the name of Kibana Docker image to use when starting a task
     private static final double REQUIRED_PORT_COUNT = 1D;          // the amount of ports a task needs
 
     private static final Options OPTIONS = new Options() {{     // launch options for the KibanaFramework
         addOption("zk", "zookeeper", true, "Zookeeper URL (zk://host:port/mesos)");
         addOption("es", "elasticsearch", true, "ElasticSearch URLs (http://host:port;http://host:port)");
+        addOption("di", "dockerimage", true, "Name of docker image to use. Defaults to 'kibana'");
         addOption("v", "version", true, "Version of Kibana docker image to use");
         addOption("cpu", "requiredCpu", true, "Amount of CPUs given to a Kibana instance (0.1)");
         addOption("mem", "requiredMem", true, "Amount of memory (MB) given to a Kibana instance (128)");
@@ -42,7 +43,9 @@ public class SchedulerConfiguration {
     private double requiredCpu = 0.1D; // the amount of CPUs a task needs
     private double requiredMem = 128D; // the amount of memory a task needs
     private double requiredDisk = 25D; // the amount of disk space a task needs
+
     private String kibanaVersion = DEFAULT_KIBANA_VERSION;
+    private String kibanaImage = DEFAULT_DOCKER_IMAGE;
 
     /**
      * Returns the name of the framework
@@ -59,7 +62,7 @@ public class SchedulerConfiguration {
      * @return the name of the Kibana Docker image
      */
     public String getDockerImageName() {
-        return String.format("%s:%s", DOCKER_IMAGE_NAME, kibanaVersion);
+        return String.format("%s:%s", kibanaImage, kibanaVersion);
     }
 
     /**
@@ -360,6 +363,11 @@ public class SchedulerConfiguration {
             setKibanaVersion(version);
         }
 
+        String image = commandLine.getOptionValue("di");
+        if (image != null) {
+            setKibanaImage(image);
+        }
+
     }
 
     /**
@@ -378,6 +386,10 @@ public class SchedulerConfiguration {
 
     public void setKibanaVersion(String kibanaVersion) {
         this.kibanaVersion = kibanaVersion;
+    }
+
+    public void setKibanaImage(String kibanaImage) {
+        this.kibanaImage = kibanaImage;
     }
 
 }
