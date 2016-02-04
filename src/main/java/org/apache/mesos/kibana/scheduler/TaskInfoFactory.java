@@ -18,7 +18,10 @@ import java.util.concurrent.atomic.AtomicInteger;
  * A factory class for TaskInfo
  */
 public class TaskInfoFactory {
+
     private static final AtomicInteger TASK_ID_GENERATOR = new AtomicInteger();  // used to generate task numbers
+
+    private static final String EXECUTOR_TASK_NAME = "kibana-executor";
 
     /**
      * Creates a new task and registers it with the configuration, ready for launch.
@@ -139,7 +142,7 @@ public class TaskInfoFactory {
      */
     private static TaskInfo buildTaskInfo(TaskID taskId, Offer offer, ContainerInfo containerInfo, CommandInfo commandInfo, List<Resource> resources) {
         TaskInfo.Builder task = TaskInfo.newBuilder()
-                .setName(taskId.getValue())
+                .setName(EXECUTOR_TASK_NAME)
                 .setTaskId(taskId)
                 .setSlaveId(offer.getSlaveId())
                 .setContainer(containerInfo)
