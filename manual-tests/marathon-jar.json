@@ -1,0 +1,14 @@
+{
+  "id": "kibana",
+  "cpus": 0.2,
+  "mem": 512,
+  "instances": 1,
+  "cmd": "mv *.jar scheduler.jar ; java -jar scheduler.jar --spring.config.location=./jar.properties --mesos.zookeeper.server=$MASTER:2181 --elasticsearch.http=http://$SLAVE0:9200",
+  "uris": [
+    "https://github.com/ContainerSolutions/mesos-framework/releases/download/0.1.0-alpha.0/mesos-framework-0.0.1.jar",
+    "https://gist.githubusercontent.com/philwinder/eb44c8cde83f60496033/raw/jar.properties"
+  ],
+  "env": {
+    "JAVA_OPTS": "-Xms256m -Xmx512m"
+  }
+}
