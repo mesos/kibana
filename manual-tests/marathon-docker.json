@@ -20,7 +20,7 @@
     }
   },
   "uris": [
-    "https://gist.githubusercontent.com/philwinder/0197358752c6059aea0c/raw/docker.properties"
+    "https://raw.githubusercontent.com/mesos/kibana/master/docs/examples/docker.properties"
   ],
   "ports": [
     31100

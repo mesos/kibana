@@ -1,12 +1,12 @@
 {
-  "id": "kibana",
+  "id": "kibana-jar",
   "cpus": 0.2,
   "mem": 256,
   "instances": 1,
-  "cmd": "mv *.jar scheduler.jar ; java -jar scheduler.jar --spring.config.location=./jar.properties --mesos.zookeeper.server=$MASTER:2181 --elasticsearch.http=http://$SLAVE0:9200 --server.port=31100",
+  "cmd": "mv *.jar scheduler.jar ; java $JAVA_OPTS -jar scheduler.jar --spring.config.location=./jar.properties --mesos.zookeeper.server=$MASTER:2181 --elasticsearch.http=http://$SLAVE0:9200 --server.port=31100",
   "uris": [
-    "https://github.com/ContainerSolutions/mesosframework/releases/download/0.1.0-alpha.3/mesosframework-0.0.1.jar",
-    "https://gist.githubusercontent.com/philwinder/eb44c8cde83f60496033/raw/jar.properties"
+    "https://github.com/ContainerSolutions/mesosframework/releases/download/0.1.0-beta.0/mesosframework-0.0.1.jar",
+    "https://raw.githubusercontent.com/mesos/kibana/master/docs/examples/jar.properties"
   ],
   "env": {
     "JAVA_OPTS": "-Xms32m -Xmx128m"
