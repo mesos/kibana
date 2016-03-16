@@ -13,7 +13,11 @@ hs_err_pid*
 
 .gradle
 build/
+target/
 .idea
+.minimesos
+.maven
+*.iml
 
 # Ignore Gradle GUI config
 gradle-app.setting
