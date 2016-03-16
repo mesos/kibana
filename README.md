@@ -34,6 +34,7 @@ To pass a configuration file, the following property must be set:
 
 ## Full list of Kibana related settings
 All settings are written in properties or argument format. Remember that these can also be specified in environment or yml format.
+
 | Command | Description |
 | --- | --- |
 | `spring.application.name` | Required application name for Spring |
@@ -82,12 +83,14 @@ mesos.resources.ports.UI_5061=ANY
 Assigns an unprivileged port to the environmental variable `UI_5061`. This environmental variable can now be use in the `mesos.command` or `mesos.docker.parameter.${VAR}`.
 
 The value can be one of the following types:
+
 | Command | Description |
 | --- | --- |
 | `ANY` | The next available unprivileged port (>1024) |
 | `UNPRIVILEGED` | The next available unprivileged port (>1024) |
 | `PRIVILEGED` | The next available privileged port (<=1024) |
 | `1234` | A specific port (e.g. 1234) |
+
 ### Passing extra Docker parameters
 It is possible to pass task custom Docker parameters. For example:
 ```
