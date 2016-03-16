@@ -2,10 +2,10 @@
 
 [Kibana](https://www.elastic.co/products/kibana) framework for Mesos.
 
-This uses the [Mesos-Framework](ttps://github.com/ContainerSolutions/mesosframework) project. The framework is generic and only becomes a Kibana framework with the correct configuration.
+This uses the [Mesos-Framework](https://github.com/ContainerSolutions/mesosframework) project. The framework is generic and only becomes a Kibana framework with the correct configuration.
 
 # Features
-(Features come from the [Mesos-Starter](ttps://github.com/ContainerSolutions/mesos-starter) project)
+(Features come from the [Mesos-Starter](https://github.com/ContainerSolutions/mesos-starter) project)
 
 - [x] State stored in ZooKeeper
 - [x] Mesos Authorisation
@@ -20,7 +20,7 @@ This uses the [Mesos-Framework](ttps://github.com/ContainerSolutions/mesosframew
 - [x] Single endpoint to check health of all instances
 
 # Usage
-Because this project uses [Mesos-Framework](ttps://github.com/ContainerSolutions/mesosframework) there is no Kibana-specific code to compile or download. To run, simply pass a configuration file or options. Example marathon files can be found in the [manual-tests](./manual-tests) directory.
+Because this project uses [Mesos-Framework](https://github.com/ContainerSolutions/mesosframework) there is no Kibana-specific code to compile or download. To run, simply pass a configuration file or options. Example marathon files can be found in the [manual-tests](./manual-tests) directory.
 
 All options can be specified as either:
 - A cli parameter: `--mesos.command=pwd`
@@ -53,7 +53,7 @@ All settings are written in properties or argument format. Remember that these c
 | `logging.level.com.containersolutions.mesos` | Logging level |
 | `mesos.healthCheck.command` | The command to run as the Mesos healthcheck |
 
-Note that there are more parameters. See [Mesos-Starter](ttps://github.com/ContainerSolutions/mesos-starter).
+Note that there are more parameters. See [Mesos-Starter](https://github.com/ContainerSolutions/mesos-starter).
 
 ## Useful Kibana related settings
 ### Jar mode
@@ -99,7 +99,7 @@ mesos.docker.parameter.env=["CUSTOM_ENV=hello!"]
 ```
 Will result in a Docker command that looks like: `docker run --expose=1234 --env=["CUSTOM_ENV=hello!"] ...`. The environmental variable `$UI_5061` has been expanded.
 ## Health checks
-[Mesos-Framework](ttps://github.com/ContainerSolutions/mesosframework) uses Spring Actuator to provide health and metrics endpoints. To access the health endpoint visit: `http://${SCHEDULER_IP_ADDRESS}:${server.port}/health`. Acuator defaults the `server.port` to 8080, although it is recommended to reserve ports in the marathon command and set this port explicitly. E.g. [jar mode json file](./manual-tests/marathon-jar.json)
+[Mesos-Framework](https://github.com/ContainerSolutions/mesosframework) uses Spring Actuator to provide health and metrics endpoints. To access the health endpoint visit: `http://${SCHEDULER_IP_ADDRESS}:${server.port}/health`. Acuator defaults the `server.port` to 8080, although it is recommended to reserve ports in the marathon command and set this port explicitly. E.g. [jar mode json file](./manual-tests/marathon-jar.json)
 
 See the [Spring documentation](http://docs.spring.io/spring-boot/docs/current-SNAPSHOT/reference/htmlsingle/#production-ready-endpoints) for more information.
 
