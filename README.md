@@ -2,7 +2,7 @@
 
 [Kibana](https://www.elastic.co/products/kibana) framework for Mesos.
 
-This uses the [Mesos-Framework](ttps://github.com/ContainerSolutions/mesos-framework) project. The framework is generic and only becomes a Kibana framework with the correct configuration.
+This uses the [Mesos-Framework](ttps://github.com/ContainerSolutions/mesosframework) project. The framework is generic and only becomes a Kibana framework with the correct configuration.
 
 # Features
 (Features come from the [Mesos-Starter](ttps://github.com/ContainerSolutions/mesos-starter) project)
@@ -15,11 +15,11 @@ This uses the [Mesos-Framework](ttps://github.com/ContainerSolutions/mesos-frame
 - [x] Import Kibana.yml settings file
 - [x] "Spread" orchestration strategy (Spreads instances across distinct hosts)
 - [x] Decoupled from Kibana. Use any version.
-- [x] Decoupled from Mesos. Use any version 0.25+.
-- [ ] Single endpoint to check health of all instances
+- [ ] Decoupled from Mesos. Use any version 0.25+.
+- [x] Single endpoint to check health of all instances
 
 # Usage
-Because this project uses [Mesos-Framework](ttps://github.com/ContainerSolutions/mesos-framework) there is no Kibana-specific code to compile or download. To run, simply pass a configuration file or options. Example marathon files can be found in the [manual-tests](./manual-tests) directory.
+Because this project uses [Mesos-Framework](ttps://github.com/ContainerSolutions/mesosframework) there is no Kibana-specific code to compile or download. To run, simply pass a configuration file or options. Example marathon files can be found in the [manual-tests](./manual-tests) directory.
 
 All options can be specified as either:
 - A cli parameter: `--mesos.command=pwd`
@@ -51,6 +51,9 @@ Or when in docker mode:
 ```
 mesos.command=mv $MESOS_SANDBOX/kibana.yml /opt/kibana/config/kibana.yml ; kibana --port=$UI_5061 --elasticsearch ${elasticsearch.http}
 ```
+## Health checks
+
+
 
 # Sponsors
 This project is sponsored by Cisco Cloud Services.
