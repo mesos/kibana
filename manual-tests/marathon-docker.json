@@ -1,0 +1,29 @@
+{
+  "id": "kibana-docker",
+  "cpus": 0.2,
+  "mem": 256,
+  "instances": 1,
+  "args": [
+    "--spring.config.location=/mnt/mesos/sandbox/docker.properties",
+    "--mesos.zookeeper.server=$MASTER:2181",
+    "--elasticsearch.http=http://$SLAVE0:9200",
+    "--server.port=31100"
+  ],
+  "env": {
+    "JAVA_OPTS": "-Xms32m -Xmx128m"
+  },
+  "container": {
+    "type": "DOCKER",
+    "docker": {
+      "image": "containersol/mesosframework:0.1.0-beta.0",
+      "network": "HOST"
+    }
+  },
+  "uris": [
+    "https://gist.githubusercontent.com/philwinder/0197358752c6059aea0c/raw/docker.properties"
+  ],
+  "ports": [
+    31100
+  ],
+  "requirePorts": true
+}
