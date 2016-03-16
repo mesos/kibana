@@ -8,7 +8,8 @@ This uses the [Mesos-Framework](ttps://github.com/ContainerSolutions/mesosframew
 (Features come from the [Mesos-Starter](ttps://github.com/ContainerSolutions/mesos-starter) project)
 
 - [x] State stored in ZooKeeper
-- [x] Mesos and ZooKeeper Authorisation
+- [x] Mesos Authorisation
+- [ ] ZooKeeper Authorisation
 - [ ] Live horizontal scaling
 - [x] Jar mode (no docker)
 - [x] Resource specification (including port)
@@ -31,6 +32,28 @@ In that order of preference.
 To pass a configuration file, the following property must be set:
 - `--spring.config.location=my.properties` (Or the env var `SPRING_CONFIG_LOCATION`, etc.)
 
+## Full list of Kibana related settings
+All settings are written in properties or argument format. Remember that these can also be specified in environment or yml format.
+| Command | Description |
+| --- | --- |
+| `spring.application.name` | Required application name for Spring |
+| `mesos.framework.name` | Framework name used in Mesos and ZooKeeper |
+| `mesos.master` | URL of the master (usually provided by ZooKeeper) |
+| `mesos.zookeeper.server` | IP:PORT of the zookeeper server |
+| `mesos.resources.cpus` | CPUs allocated to the task |
+| `mesos.resources.mem` | RAM allocated to the task |
+| `mesos.resources.scale` | Number of task instances |
+| `mesos.resources.ports.${VAR}` | A requested port, where VAR is the name of the port |
+| `mesos.docker.image` | Docker image to use |
+| `mesos.docker.network` | Type of docker network |
+| `mesos.docker.parameter.${VAR}` | Any "double-dash" Docker parameter, where VAR is the name of the parameter |
+| `mesos.command` | The command to run |
+| `mesos.uri[0..]` | Files to download into the Mesos sandbox |
+| `logging.level.com.containersolutions.mesos` | Logging level |
+| `mesos.healthCheck.command` | The command to run as the Mesos healthcheck |
+
+Note that there are more parameters. See [Mesos-Starter](ttps://github.com/ContainerSolutions/mesos-starter).
+
 ## Useful Kibana related settings
 ### Jar mode
 See the [jar mode json file](./manual-tests/marathon-jar.json) and [jar properties](./docs/examples/jar.properties) files for examples.
@@ -51,6 +74,27 @@ Or when in docker mode:
 ```
 mesos.command=mv $MESOS_SANDBOX/kibana.yml /opt/kibana/config/kibana.yml ; kibana --port=$UI_5061 --elasticsearch ${elasticsearch.http}
 ```
+### Port allocation
+Ports are allocated by Mesos and provided to the application as an environmental variable. For example:
+```
+mesos.resources.ports.UI_5061=ANY
+```
+Assigns an unprivileged port to the environmental variable `UI_5061`. This environmental variable can now be use in the `mesos.command` or `mesos.docker.parameter.${VAR}`.
+
+The value can be one of the following types:
+| Command | Description |
+| --- | --- |
+| `ANY` | The next available unprivileged port (>1024) |
+| `UNPRIVILEGED` | The next available unprivileged port (>1024) |
+| `PRIVILEGED` | The next available privileged port (<=1024) |
+| `1234` | A specific port (e.g. 1234) |
+### Passing extra Docker parameters
+It is possible to pass task custom Docker parameters. For example:
+```
+mesos.docker.parameter.expose=$UI_5061
+mesos.docker.parameter.env=["CUSTOM_ENV=hello!"]
+```
+Will result in a Docker command that looks like: `docker run --expose=1234 --env=["CUSTOM_ENV=hello!"] ...`. The environmental variable `$UI_5061` has been expanded.
 ## Health checks
 [Mesos-Framework](ttps://github.com/ContainerSolutions/mesosframework) uses Spring Actuator to provide health and metrics endpoints. To access the health endpoint visit: `http://${SCHEDULER_IP_ADDRESS}:${server.port}/health`. Acuator defaults the `server.port` to 8080, although it is recommended to reserve ports in the marathon command and set this port explicitly. E.g. [jar mode json file](./manual-tests/marathon-jar.json)
 
