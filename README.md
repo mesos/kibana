@@ -52,7 +52,9 @@ Or when in docker mode:
 mesos.command=mv $MESOS_SANDBOX/kibana.yml /opt/kibana/config/kibana.yml ; kibana --port=$UI_5061 --elasticsearch ${elasticsearch.http}
 ```
 ## Health checks
+[Mesos-Framework](ttps://github.com/ContainerSolutions/mesosframework) uses Spring Actuator to provide health and metrics endpoints. To access the health endpoint visit: `http://${SCHEDULER_IP_ADDRESS}:${server.port}/health`. Acuator defaults the `server.port` to 8080, although it is recommended to reserve ports in the marathon command and set this port explicitly. E.g. [jar mode json file](./manual-tests/marathon-jar.json)
 
+See the [Spring documentation](http://docs.spring.io/spring-boot/docs/current-SNAPSHOT/reference/htmlsingle/#production-ready-endpoints) for more information.
 
 
 # Sponsors
