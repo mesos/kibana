@@ -9,14 +9,14 @@ This uses the [Mesos-Framework](https://github.com/ContainerSolutions/mesosframe
 
 - [x] State stored in ZooKeeper
 - [x] Mesos Authorisation
-- [ ] ZooKeeper Authorisation
+- [ ] ZooKeeper Authorisation (requires testing)
 - [ ] Live horizontal scaling
 - [x] Jar mode (no docker)
 - [x] Resource specification (including port)
 - [x] Import Kibana.yml settings file
 - [x] "Spread" orchestration strategy (Spreads instances across distinct hosts)
 - [x] Decoupled from Kibana. Use any version.
-- [ ] Decoupled from Mesos. Use any version 0.25+.
+- [x] Decoupled from Mesos. Use any version 0.25+.
 - [x] Single endpoint to check health of all instances
 
 # Usage
