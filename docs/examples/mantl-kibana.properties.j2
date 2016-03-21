@@ -20,7 +20,8 @@ elasticsearch.http={{ elasticsearch_http }}
 mesos.resources.cpus={{ kibana_executor_cpu }}
 mesos.resources.mem={{ kibana_executor_ram }}
 mesos.resources.count={{ kibana_executor_instances }}
-mesos.resources.ports.UI_5061.host=ANY
+mesos.resources.ports.UI_5601.host=ANY
+mesos.resources.ports.UI_5601.container=5601
 
 # Docker image
 mesos.docker.image={{ kibana_image_name }}:{{ kibana_image_tag }}

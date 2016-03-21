@@ -2,16 +2,16 @@
 
 elasticsearch_http: elasticsearch-executor.service.consul:9200
 framework_ui_port: 31200
-kibana_command: mv $MESOS_SANDBOX/*.yml /opt/kibana/config/kibana.yml ; kibana --port=$UI_5061 --elasticsearch {{ elasticsearch_http }}
+kibana_command: mv $MESOS_SANDBOX/*.yml /opt/kibana/config/kibana.yml ; kibana --elasticsearch {{ elasticsearch_http }}
 kibana_executor_cpu: 0.5
 kibana_executor_instances: 3
-kibana_executor_network: HOST
+kibana_executor_network: BRIDGE
 kibana_executor_ram: 1024
 kibana_framework_cpu: 0.5
 kibana_framework_healthcheck_command: wget -q localhost:5601
 kibana_framework_heap: 128
 kibana_framework_image_name: containersol/mesosframework
-kibana_framework_image_tag: 0.1.0-beta.1
+kibana_framework_image_tag: 0.1.0-beta.4
 kibana_framework_instances: 1
 kibana_framework_ip: kibana.service.consul
 kibana_framework_log_level: WARN
