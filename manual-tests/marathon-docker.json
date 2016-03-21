@@ -15,7 +15,7 @@
   "container": {
     "type": "DOCKER",
     "docker": {
-      "image": "containersol/mesosframework:0.1.0-beta.1",
+      "image": "containersol/mesosframework:0.1.0",
       "network": "HOST"
     }
   },

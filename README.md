@@ -5,12 +5,12 @@
 This uses the [Mesos-Framework](https://github.com/ContainerSolutions/mesosframework) project. The framework is generic and only becomes a Kibana framework with the correct configuration.
 
 # Features
-(Features come from the [Mesos-Starter](https://github.com/ContainerSolutions/mesos-starter) project)
+(Features come from the upstream [Mesos-Framework](https://github.com/ContainerSolutions/mesosframework) and [Mesos-Starter](https://github.com/ContainerSolutions/mesos-starter) projects)
 
 - [x] State stored in ZooKeeper
 - [x] Mesos Authorisation
-- [ ] ZooKeeper Authorisation (requires testing)
-- [x] Live horizontal scaling
+- [/] ZooKeeper Authorisation (should work, requires testing)
+- [x] Live horizontal scaling via REST endpoint
 - [x] Jar mode (no docker)
 - [x] Resource specification (including port)
 - [x] Import Kibana.yml settings file
@@ -79,8 +79,9 @@ mesos.command=mv $MESOS_SANDBOX/kibana.yml /opt/kibana/config/kibana.yml ; kiban
 Ports are allocated by Mesos and provided to the application as an environmental variable. For example:
 ```
 mesos.resources.ports.UI_5061.host=ANY
+mesos.resources.ports.UI_5061.container=5601
 ```
-Assigns an unprivileged port to the environmental variable `UI_5061`. This environmental variable can now be use in the `mesos.command`.
+Assigns an unprivileged port to the environmental variable `UI_5061`. This environmental variable can now be use in the `mesos.command`, if required.
 
 The value can be one of the following types:
 
