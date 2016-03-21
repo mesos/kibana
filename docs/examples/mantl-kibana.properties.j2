@@ -1,0 +1,40 @@
+# Introduction
+# This is a properties file for the mantl project. Most options are injected by ansible.
+# All of the properties in the mesos-starter project are overridable.
+
+
+# Required application name for Spring
+spring.application.name={{ kibana_framework_name }}
+
+# Mesos framework name
+mesos.framework.name={{ kibana_framework_name }}
+
+# Mesos settings
+mesos.zookeeper.server={{ zookeeper }}
+mesos.master={{ mesos_zk }}
+
+# ES location
+elasticsearch.http={{ elasticsearch_http }}
+
+# Task resources
+mesos.resources.cpus={{ kibana_executor_cpu }}
+mesos.resources.mem={{ kibana_executor_ram }}
+mesos.resources.count={{ kibana_executor_instances }}
+mesos.resources.ports.UI_5601.host=ANY
+mesos.resources.ports.UI_5601.container=5601
+
+# Docker image
+mesos.docker.image={{ kibana_image_name }}:{{ kibana_image_tag }}
+mesos.docker.network={{ kibana_executor_network }}
+
+# Log level
+logging.level.com.containersolutions.mesos={{ kibana_framework_log_level }}
+
+# Task HealthChecks (Will kill executors that don't respond) (Note: HealthChecks do not work in Mesos 0.25.0, 0.24.0 or 0.23.0)
+# See https://issues.apache.org/jira/browse/MESOS-3738  and  https://issues.apache.org/jira/browse/MESOS-3136
+# And HTTP healthchecks still don't work: https://issues.apache.org/jira/browse/MESOS-2533
+mesos.healthCheck.command={{ kibana_framework_healthcheck_command }}
+
+# Command to run
+mesos.uri[0]={{ kibana_settings_path }}
+mesos.command={{ kibana_command }}

@@ -1,0 +1,35 @@
+{
+  "id": "kibana-docker",
+  "cpus": 0.2,
+  "mem": 256,
+  "instances": 1,
+  "args": [
+    "--spring.application.name=kibana-docker",
+    "--mesos.framework.name=kibana-docker",
+    "--mesos.master=zk://$MASTER:2181/mesos",
+    "--mesos.docker.image=kibana:latest",
+    "--mesos.docker.network=BRIDGE",
+    "--mesos.resources.mem=256",
+    "--mesos.resources.cpu=0.2",
+    "--mesos.resources.count=3",
+    "--mesos.command=kibana --elasticsearch ${elasticsearch.http}",
+    "--logging.level.com.containersolutions.mesos=DEBUG",
+    "--mesos.zookeeper.server=$MASTER:2181",
+    "--elasticsearch.http=http://$SLAVE0:9200",
+    "--server.port=31100"
+  ],
+  "env": {
+    "JAVA_OPTS": "-Xms32m -Xmx128m"
+  },
+  "container": {
+    "type": "DOCKER",
+    "docker": {
+      "image": "containersol/mesosframework:0.1.0",
+      "network": "BRIDGE"
+    }
+  },
+  "ports": [
+    31100
+  ],
+  "requirePorts": true
+}

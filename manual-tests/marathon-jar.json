@@ -5,7 +5,7 @@
   "instances": 1,
   "cmd": "mv *.jar scheduler.jar ; java $JAVA_OPTS -jar scheduler.jar --spring.config.location=./jar.properties --mesos.zookeeper.server=$MASTER:2181 --elasticsearch.http=http://$SLAVE0:9200 --server.port=31100",
   "uris": [
-    "https://github.com/ContainerSolutions/mesosframework/releases/download/0.1.0-beta.0/mesosframework-0.0.1.jar",
+    "https://github.com/ContainerSolutions/mesosframework/releases/download/0.1.0/mesosframework-0.1.0.jar",
     "https://raw.githubusercontent.com/mesos/kibana/master/docs/examples/jar.properties"
   ],
   "env": {
