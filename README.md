@@ -90,6 +90,8 @@ All settings are written in properties or argument format. Remember that these c
 | `mesos.command` | The command to run |
 | `mesos.uri[0..]` | Files to download into the Mesos sandbox |
 | `logging.level.com.containersolutions.mesos` | Logging level |
+| `mesos.principal` | The principal for Mesos Auth. |
+| `mesos.secret`  | The secret for Mesos Auth. |
 | `mesos.healthCheck.command` | The command to run as the Mesos healthcheck |
 
 Note that there are more parameters. See [Mesos-Starter](https://github.com/ContainerSolutions/mesos-starter).
