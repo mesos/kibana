@@ -66,6 +66,7 @@ All options can be specified as either:
 - A properties file: `mesos.command=pwd`
 - Java options: `-Dmesos.command=pwd`
 - Environmental variables: `MESOS_COMMAND=pwd`
+ 
 In that order of preference.
 
 To pass a configuration file, the following property must be set:
